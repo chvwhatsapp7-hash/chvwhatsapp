@@ -1,0 +1,42 @@
+    .hero-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  background-color: #f8f9fa;
+  min-height: 60vh;
+}
+
+.hero-title {
+  font-size: 3.5em;
+  color: #075E54; /* WhatsApp Dark Green */
+  margin-bottom: 20px;
+  font-weight: bold;
+  max-width: 800px;
+}
+
+.hero-subtitle {
+  font-size: 1.4em;
+  color: #555;
+  margin-bottom: 40px;
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+.hero-cta-button {
+  background-color: #25D366; /* WhatsApp Light Green */
+  color: white;
+  padding: 15px 35px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 1.2em;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.hero-cta-button:hover {
+  background-color: #128C7E; /* Darker green */
+  transform: translateY(-2px);
+}
