@@ -182,7 +182,7 @@ function RegisterForm() {
                             onClick={togglePasswordVisibility}
                             style={eyeIconStyle}
                         >
-                            {showPassword ? '👁️' : '🔒'} {/* You can use an actual eye icon font or SVG here */}
+                            {showPassword ? '👁️' : '🔒'}
                         </span>
                         </div>
     

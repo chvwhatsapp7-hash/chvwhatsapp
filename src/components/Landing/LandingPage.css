@@ -1,0 +1,179 @@
+/* --- WhatsApp Color Palette --- */
+:root {
+  --whatsapp-primary-green: #075E54; /* Dark Teal */
+  --whatsapp-secondary-green: #128C7E;
+  --whatsapp-accent-green: #25D366; /* Bright Green for CTAs */
+  --whatsapp-light-green: #DCF8C6; /* Chat bubble green */
+  --whatsapp-bg-light: #f8f9fa;
+  --text-dark: #333;
+  --text-light: #555;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+}
+
+.landing-page-container {
+  width: 100%;
+}
+
+/* --- Navigation Bar --- */
+.landing-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5%;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-logo {
+  font-size: 2.0em;
+  font-weight: bold;
+  color: var(--whatsapp-primary-green);
+  text-decoration: none;
+}
+
+.nav-links a, .nav-links button {
+  margin: 0 15px;
+  text-decoration: none;
+  font-size: 1.2em;
+  color: var(--whatsapp-secondary-green);
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.nav-links a:hover {
+  color: var(--whatsapp-primary-green);
+}
+
+.nav-button {
+  background-color: var(--whatsapp-accent-green);
+  color: white !important;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.nav-button:hover {
+  background-color: #1ebe57;
+}
+
+/* --- Hero Section --- */
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 20px;
+  background-color: var(--whatsapp-bg-light);
+}
+
+.hero-title {
+  font-size: 3.8em;
+  color: var(--whatsapp-primary-green);
+  margin-bottom: 20px;
+  font-weight: 700;
+  max-width: 900px;
+}
+
+.hero-subtitle {
+  font-size: 1.4em;
+  color: var(--text-light);
+  margin-bottom: 40px;
+  max-width: 750px;
+  line-height: 1.6;
+}
+
+.hero-cta {
+  background-color: var(--whatsapp-accent-green);
+  color: white;
+  padding: 18px 40px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 1.3em;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.hero-cta:hover {
+  background-color: #1ebe57;
+  transform: translateY(-3px);
+}
+
+/* --- Features Section --- */
+.features-section {
+  padding: 80px 5%;
+  text-align: center;
+  background-color: #fff;
+}
+
+.section-title {
+  font-size: 2.8em;
+  color: var(--whatsapp-primary-green);
+  margin-bottom: 60px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  text-align: left;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.feature-icon {
+  font-size: 3em;
+  background-color: var(--whatsapp-light-green);
+  color: var(--whatsapp-primary-green);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.feature-title {
+  font-size: 1.5em;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.feature-description {
+  font-size: 1em;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+/* --- Footer --- */
+.landing-footer {
+  text-align: center;
+  padding: 40px 20px;
+  margin-top: 40px;
+  background-color: var(--whatsapp-primary-green);
+  color: rgba(255, 255, 255, 0.8);
+}

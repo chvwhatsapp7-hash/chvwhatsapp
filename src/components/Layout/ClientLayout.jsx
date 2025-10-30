@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Reusing the same style object from AdminLayout for consistency
 const layoutStyles = {
@@ -50,13 +51,15 @@ const ClientLayout = ({ children, pageTitle }) => {
     <div style={layoutStyles.layoutContainer}>
       <aside style={layoutStyles.sidebar}>
         <div style={layoutStyles.logoContainer}>
-          <div style={layoutStyles.logo}>WANotifier</div>
+          <div style={layoutStyles.logo}>CHV Whatsapp</div>
           <p style={{ fontSize: '0.8em', color: 'rgba(255,255,255,0.7)', margin: '5px 0 0 0' }}>CLIENT PANEL</p>
         </div>
         <nav>
           <ul style={layoutStyles.navList}>
             {clientNavLinks.map((link) => (
+
               <li key={link.name} style={layoutStyles.navItem}>
+
                 <Link
                   to={link.path}
                   style={{
@@ -81,6 +84,7 @@ const ClientLayout = ({ children, pageTitle }) => {
         <header style={layoutStyles.header}>
           <h1 style={layoutStyles.headerTitle}>{pageTitle}</h1>
         </header>
+
         {children}
       </main>
     </div>
