@@ -12,13 +12,12 @@ function Contacts() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // 1. --- Fetch existing contacts on page load ---
   const fetchContacts = async () => {
     setLoading(true);
     try {
       const res = await fetch("http://localhost:3000/api/Contact", {
         method: "GET",
-        credentials: "include", // IMPORTANT: This sends your auth cookies
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -39,7 +38,6 @@ function Contacts() {
     fetchContacts();
   }, []);
 
-  // 2. --- Handler for adding a single contact ---
   const handleAddContact = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -51,10 +49,10 @@ function Contacts() {
         "http://localhost:3000/api/Contact?action=addcontacts",
         {
           method: "POST",
-          credentials: "include", // Sends auth cookies
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contacts: [{ name, phonenum: phone }], // Use 'phonenum'
+            contacts: [{ name, phonenum: phone }],
           }),
         }
       );
@@ -63,7 +61,7 @@ function Contacts() {
       if (!res.ok) throw new Error(data.message);
 
       setSuccess(data.message);
-      await fetchContacts(); // Refresh the list
+      await fetchContacts();
       setName("");
       setPhone("");
     } catch (err) {
@@ -73,7 +71,7 @@ function Contacts() {
     }
   };
 
-  // 3. --- Handler for uploading the CSV file ---
+  // --- Handler for uploading the CSV file ---
   const handleCsvUpload = async (e) => {
     e.preventDefault();
     if (!file) {
@@ -91,18 +89,47 @@ function Contacts() {
     try {
       const res = await fetch("http://localhost:3000/api/Uploadcsv", {
         method: "POST",
-        credentials: "include", // Sends auth cookies
+        credentials: "include",
         body: formData,
-        // NOTE: Do NOT set 'Content-Type' header, browser does it for FormData
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
       setSuccess(data.message);
-      await fetchContacts(); // Refresh the list
+      await fetchContacts();
       setFile(null);
-      e.target.reset(); // Clear the file input
+      e.target.reset();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteContact = async (contactId) => {
+    if (!window.confirm("Are you sure you want to delete this contact?")) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/Contact/${contactId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setSuccess(data.message || "Contact deleted successfully");
+      await fetchContacts();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -119,9 +146,14 @@ function Contacts() {
         {success && <p style={{ color: "green" }}>Success: {success}</p>}
 
         {/* --- Forms --- */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-          
-          {/* --- Form 1: Add Single Contact --- */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "2rem",
+          }}
+        >
+          {/* --- Add Single Contact --- */}
           <form onSubmit={handleAddContact} style={formStyle}>
             <h3>Add Single Contact</h3>
             <input
@@ -145,7 +177,7 @@ function Contacts() {
             </button>
           </form>
 
-          {/* --- Form 2: Upload CSV --- */}
+          {/* --- Upload CSV --- */}
           <form onSubmit={handleCsvUpload} style={formStyle}>
             <h3>Upload CSV File</h3>
             <p style={{ margin: 0, fontSize: "0.9em" }}>
@@ -171,20 +203,31 @@ function Contacts() {
             <tr>
               <th style={thStyle}>Name</th>
               <th style={thStyle}>Phone Number</th>
+              <th style={thStyle}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {contacts.length > 0 ? (
               contacts.map((contact) => (
-                <tr key={contact.contact_id}>
+                <tr key={contact.contactid}>
                   <td style={tdStyle}>{contact.name}</td>
-                  {/* Use 'phonenum' here as well */}
+
                   <td style={tdStyle}>{contact.phonenum}</td>
+
+                  <td style={tdStyle}>
+                    <button
+                      onClick={() => handleDeleteContact(contact.contactid)}
+                      disabled={loading}
+                      style={deleteButtonStyle}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="2" style={tdStyle}>
+                <td colSpan="3" style={tdStyle}>
                   You have no contacts yet.
                 </td>
               </tr>
@@ -196,7 +239,7 @@ function Contacts() {
   );
 }
 
-// --- Basic Styles (for demonstration) ---
+
 const formStyle = {
   padding: "1.5rem",
   border: "1px solid #ddd",
@@ -220,6 +263,16 @@ const buttonStyle = {
   borderRadius: "4px",
   cursor: "pointer",
   fontSize: "1rem",
+};
+
+const deleteButtonStyle = {
+  padding: "0.3rem 0.6rem",
+  backgroundColor: "#dc3545",
+  color: "white",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+  fontSize: "0.9rem",
 };
 const tableStyle = {
   width: "100%",
