@@ -16,7 +16,7 @@ function Contacts() {
   const fetchContacts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/Contact", {
+      const res = await fetch("/api/Contact", {
         method: "GET",
         credentials: "include", // IMPORTANT: This sends your auth cookies
       });
@@ -48,7 +48,7 @@ function Contacts() {
 
     try {
       const res = await fetch(
-        "http://localhost:3000/api/Contact?action=addcontacts",
+        "/api/Contact?action=addcontacts",
         {
           method: "POST",
           credentials: "include", // Sends auth cookies
@@ -89,7 +89,7 @@ function Contacts() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:3000/api/Uploadcsv", {
+      const res = await fetch("/api/Uploadcsv", {
         method: "POST",
         credentials: "include", // Sends auth cookies
         body: formData,
