@@ -8,6 +8,8 @@ function Contacts() {
   const [phone, setPhone] = useState("");
   const [file, setFile] = useState(null);
 
+  const API_BASE = process.env.REACT_APP_API_URL || "";
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -15,7 +17,7 @@ function Contacts() {
   const fetchContacts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/Contact", {
+      const res = await fetch(`${API_BASE}/api/Contact`, {
         method: "GET",
         credentials: "include",
       });
@@ -46,7 +48,7 @@ function Contacts() {
 
     try {
       const res = await fetch(
-        "/api/Contact?action=addcontacts",
+        `${API_BASE}/api/Contact?action=addcontacts`,
         {
           method: "POST",
           credentials: "include",
@@ -87,7 +89,7 @@ function Contacts() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/Uploadcsv", {
+      const res = await fetch(`${API_BASE}/api/Uploadcsv`, {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -117,13 +119,10 @@ function Contacts() {
     setSuccess("");
 
     try {
-      const res = await fetch(
-        `http://localhost:3000/api/Contact/${contactId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const res = await fetch(`${API_BASE}/api/Contact/${contactId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
