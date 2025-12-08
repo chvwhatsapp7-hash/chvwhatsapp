@@ -6,7 +6,7 @@ function Campaigns() {
     return(
         <ClientLayout pageTitle="Campaigns">
             <>
-                <h1>This is Campaigns Page  </h1>
+                <h1>This is Campaigns page.</h1>
             </>
         </ClientLayout>
     );
