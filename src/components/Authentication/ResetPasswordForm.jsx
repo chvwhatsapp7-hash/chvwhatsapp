@@ -30,7 +30,7 @@ function ResetPasswordForm() {
 
     try {
       const res = await fetch(
-        "/api/auth/update-password?action=updatepassword",
+        `${process.env.development.REACT_APP_API_URL}/api/auth/updatepassword?action=updatepassword`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
