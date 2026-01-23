@@ -1,3 +1,4 @@
+import { hover } from "@testing-library/user-event/dist/hover";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -141,21 +142,17 @@ export default ResetPasswordForm;
 
 const styles = {
   container: {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg, #000000, #0a1f33, #7ecbff)",
+    minHeight: "50vh",
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "40px",
+    padding: "15px",
   },
 
   card: {
     width: "460px",
-    background: "rgba(10, 25, 40, 0.95)",
+    background: "#ffffff",
     padding: "40px",
     borderRadius: "16px",
-    color: "#ffffff",
-    boxShadow: "0 25px 60px rgba(0,0,0,0.7)",
+    color: "#171515",
     backdropFilter: "blur(8px)",
   },
 
@@ -168,7 +165,7 @@ const styles = {
 
   subtitle: {
     fontSize: "15px",
-    color: "#cfd9e0",
+    color: "#020e16",
     marginBottom: "30px",
     textAlign: "center",
   },
@@ -179,7 +176,7 @@ const styles = {
 
   label: {
     fontSize: "13px",
-    color: "#9ad7ff",
+    color: "#040f15",
     marginBottom: "6px",
     display: "block",
   },
@@ -188,10 +185,10 @@ const styles = {
     width: "100%",
     padding: "14px",
     borderRadius: "8px",
-    border: "1px solid #1e3a5f",
+    border: "1px solid #b3c1c1",
     outline: "none",
-    background: "#0f243a",
-    color: "#ffffff",
+    background: "#fbfcfc",
+    color: "#090202",
     fontSize: "14px",
   },
 
@@ -200,7 +197,7 @@ const styles = {
     alignItems: "center",
     fontSize: "14px",
     marginBottom: "22px",
-    color: "#d1e8ff",
+    color: "#01070c",
   },
 
   button: {
@@ -210,15 +207,15 @@ const styles = {
     border: "none",
     fontSize: "16px",
     fontWeight: "600",
-    background: "linear-gradient(90deg, #7ecbff, #3fa9f5)",
-    color: "#001018",
+    background: "linear-gradient(90deg, #11d1d1, #11d1d1)",
+    color: "#f7fafc",
     transition: "all 0.3s ease",
   },
 
   message: {
     marginTop: "18px",
     textAlign: "center",
-    color: "#ff8a8a",
+    color: "#c21111",
     fontSize: "14px",
   },
 
@@ -226,7 +223,7 @@ const styles = {
     marginTop: "25px",
     textAlign: "center",
     fontSize: "14px",
-    color: "#7ecbff",
+    color: "#035923",
     cursor: "pointer",
     textDecoration: "underline",
   },
