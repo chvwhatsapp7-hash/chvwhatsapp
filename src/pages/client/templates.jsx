@@ -17,18 +17,19 @@ const Icons = {
 export default function TemplatesPage() {
   const emptyTemplate = {
     id: null,
-    name: '',
-    category: 'Utility',
-    language: 'en',
-    templateType: 'Custom',
-    headerType: 'Text',
-    headerText: '',
-    headerMediaUrl: '',
-    body: '',
-    footer: '',
+    template_name: "",
+    category: "Utility",
+    language: "en",
+    template_type: "Custom",
+    header_type: "text",
+    header_text: "",
+    header_media_url: "",
+    message_body: "",
+    footer_text: "",
     buttons: [],
-    placeholders: [],
-    status: 'draft',
+    variables: {},
+    variable_count: 0,
+    status: "draft",
   };
 
   const [templates, setTemplates] = useState([]);
@@ -38,23 +39,20 @@ export default function TemplatesPage() {
   const [charCount, setCharCount] = useState(0);
   const fileRef = useRef(null);
 
+  // Fetch templates on load
   useEffect(() => {
     fetchTemplates();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update char count
   useEffect(() => {
-    setCharCount((form.body || '').length);
-  }, [form.body]);
+    setCharCount((form.message_body || '').length);
+  }, [form.message_body]);
 
   async function fetchTemplates() {
     try {
-      const res = await fetch(`${API_BASE}/api/templates`);
-      if (!res.ok) {
-        console.error('Templates API returned', res.status);
-        setTemplates([]);
-        return;
-      }
+      const res = await fetch(`${API_BASE}/api/templates/template`, { credentials: 'include' });
+      if (!res.ok) throw new Error(res.statusText);
       const data = await res.json();
       setTemplates(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -68,96 +66,88 @@ export default function TemplatesPage() {
   }
 
   function addPlaceholder() {
-    const next = (form.placeholders?.length || 0) + 1;
-    updateField('body', (form.body || '') + ` {{${next}}}`);
-    updateField('placeholders', [...(form.placeholders || []), `{{${next}}}`]);
+    const next = form.variable_count + 1;
+    updateField("message_body", `${form.message_body || ""} {{${next}}}`);
+    updateField("variables", { ...form.variables, [next]: "" });
+    updateField("variable_count", next);
   }
 
   function addButton() {
-    updateField('buttons', [...(form.buttons || []), { type: 'url', text: '', payload: '' }]);
+    updateField("buttons", [...form.buttons, { button_type: "quick_reply", button_text: "", button_value: null }]);
   }
 
   function updateButton(i, key, value) {
-    const b = [...(form.buttons || [])];
+    const b = [...form.buttons];
     b[i] = { ...b[i], [key]: value };
-    updateField('buttons', b);
+    updateField("buttons", b);
   }
 
   function removeButton(i) {
-    const b = (form.buttons || []).filter((_, idx) => idx !== i);
-    updateField('buttons', b);
+    const b = form.buttons.filter((_, idx) => idx !== i);
+    updateField("buttons", b);
   }
 
-    async function handleUpload(e) {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
+  async function handleUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-        // 1. Create a Fake Local URL immediately so the preview works
-        const localUrl = URL.createObjectURL(file);
-        const type = file.type.startsWith('image/') ? 'Image' : file.type.startsWith('video/') ? 'Video' : 'Document';
+    const localUrl = URL.createObjectURL(file);
+    const type = file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : "document";
 
-        // 2. Set state immediately (This makes the image appear)
-        setForm(prev => ({
-        ...prev,
-        headerMediaUrl: localUrl,
-        headerType: type
-        }));
+    updateField("header_media_url", localUrl);
+    updateField("header_type", type);
 
-        // 3. Try to upload to backend (Silent fail if backend is 404)
-        setUploading(true);
-        const fd = new FormData();
-        fd.append('file', file);
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
 
-        try {
-        const res = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: fd });
-        if (res.ok) {
-            const js = await res.json();
-            // If upload succeeds, swap local URL for the real server URL
-            updateField('headerMediaUrl', js.url); 
-        } else {
-            console.warn("Backend upload failed (404). Keeping local preview.");
-        }
-        } catch (err) {
-        console.error("Network error during upload.", err);
-        } finally {
-        setUploading(false);
-        }
+    try {
+      const res = await fetch(`${API_BASE}/api/upload`, { method: "POST", body: fd, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const js = await res.json();
+      updateField("header_media_url", js.url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
     }
+  }
 
   function validateTemplate(t) {
-    if (!t.name) return 'Template name required.';
-    if (!t.body) return 'Body cannot be empty.';
-    if ((t.body || '').length > 1024) return 'Body exceeds 1024 characters.';
-    if (t.footer && t.footer.length > 60) return 'Footer exceeds 60 characters.';
-    if (t.headerType === 'Text' && t.headerText && t.headerText.length > 60) return 'Header text length must be <= 60.';
-    if (t.buttons && t.buttons.length > 10) return 'Up to 10 buttons allowed.';
-    for (const b of (t.buttons || [])) {
-      if (!b.text) return 'Each button needs text.';
-    }
+    if (!t.template_name) return "Template name required";
+    if (!t.message_body) return "Message body required";
+    if (t.message_body.length > 1024) return "Body exceeds 1024 chars";
+    if (t.footer_text && t.footer_text.length > 60) return "Footer exceeds 60 chars";
+    if (t.header_type === "text" && t.header_text && t.header_text.length > 60) return "Header text max 60 chars";
+    if (t.buttons && t.buttons.length > 10) return "Max 10 buttons allowed";
+    for (const b of t.buttons) if (!b.button_text) return "Each button needs text";
     return null;
   }
 
   async function saveTemplate(e) {
-    e && e.preventDefault();
+    e?.preventDefault();
     const err = validateTemplate(form);
-    if (err) {
-      window.alert(err);
-      return;
-    }
+    if (err) return window.alert(err);
+
     try {
-      const method = form.id ? 'PUT' : 'POST';
-      const endpoint = form.id ? `${API_BASE}/api/templates?id=${encodeURIComponent(form.id)}` : `${API_BASE}/api/templates`;
+      const method = form.id ? "PUT" : "POST";
+      const endpoint = form.id
+        ? `${API_BASE}/api/templates/template?id=${encodeURIComponent(form.id)}`
+        : `${API_BASE}/api/templates/template`;
+
       const res = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(form),
       });
+
       if (!res.ok) {
         const txt = await res.text();
         console.error('saveTemplate failed', res.status, txt);
-        window.alert('Save failed: ' + res.status);
-        return;
+        return window.alert('Save failed: ' + res.status);
       }
+
       const data = await res.json();
       window.alert(data.message || 'Saved');
       setForm(emptyTemplate);
@@ -169,12 +159,13 @@ export default function TemplatesPage() {
     }
   }
 
-  function startEdit(template) {
+  function startEdit(t) {
     setForm({
       ...emptyTemplate,
-      ...template,
-      buttons: template.buttons || [],
-      placeholders: template.placeholders || [],
+      ...t,
+      buttons: t.buttons || [],
+      variables: t.variables || {},
+      variable_count: t.variable_count || 0,
     });
     setEditing(true);
   }
@@ -182,11 +173,8 @@ export default function TemplatesPage() {
   async function deleteTemplate(id) {
     if (!window.confirm('Delete template?')) return;
     try {
-      const res = await fetch(`${API_BASE}/api/templates?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-      if (!res.ok) {
-        window.alert('Delete failed: ' + res.status);
-        return;
-      }
+      const res = await fetch(`${API_BASE}/api/templates/template?id=${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) return window.alert('Delete failed: ' + res.status);
       const js = await res.json();
       window.alert(js.message || 'Deleted');
       await fetchTemplates();
@@ -198,11 +186,8 @@ export default function TemplatesPage() {
 
   async function submitForApproval(id) {
     try {
-      const res = await fetch(`${API_BASE}/api/submit?id=${encodeURIComponent(id)}`, { method: 'POST' });
-      if (!res.ok) {
-        window.alert('Submit failed: ' + res.status);
-        return;
-      }
+      const res = await fetch(`${API_BASE}/api/submit?id=${encodeURIComponent(id)}`, { method: 'POST', credentials: 'include' });
+      if (!res.ok) return window.alert('Submit failed: ' + res.status);
       const js = await res.json();
       window.alert(js.message || 'Submitted for approval');
       await fetchTemplates();
@@ -212,7 +197,6 @@ export default function TemplatesPage() {
     }
   }
 
-  // Helper to format date if needed, or just display status nicely
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'approved': return 'status-success';
@@ -295,8 +279,8 @@ export default function TemplatesPage() {
                     <label>Template Name</label>
                     <input 
                       type="text" 
-                      value={form.name ?? ''} 
-                      onChange={e => updateField('name', e.target.value)} 
+                      value={form.template_name} 
+                      onChange={e => updateField('template_name', e.target.value)} 
                       placeholder="e.g. welcome_message_v1" 
                     />
                     <small>Only lowercase alphanumeric and underscores.</small>
@@ -367,8 +351,8 @@ export default function TemplatesPage() {
                     </div>
                     <div className="wa-textarea-wrapper">
                         <textarea
-                        value={form.body ?? ''}
-                        onChange={e => updateField('body', e.target.value)}
+                        value={form.message_body ?? ''}
+                        onChange={e => updateField('message_body', e.target.value)}
                         placeholder="Hi {{1}}, your order {{2}} is ready..."
                         />
                         <div className="wa-toolbar">
@@ -442,7 +426,7 @@ export default function TemplatesPage() {
 
                             {/* Body Text */}
                             <div className="msg-content">
-                                {(form.body || 'Your message text will appear here...').split(/(\{\{\d+\}\})/g).map((part, i) =>
+                                {(form.message_body || 'Your message text will appear here...').split(/(\{\{\d+\}\})/g).map((part, i) =>
                                 part.match(/\{\{\d+\}\}/) ? <span className="msg-var" key={i}>{part}</span> : <span key={i}>{part}</span>
                                 )}
                             </div>
