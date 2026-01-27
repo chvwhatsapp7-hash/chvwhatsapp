@@ -147,8 +147,8 @@ async function saveTemplate(e) {
   try {
     const method = form.id ? "PUT" : "POST";
     const endpoint = form.id
-      ? `${API_BASE}/api/templates/template?id=${encodeURIComponent(form.id)}`
-      : `${API_BASE}/api/templates/template`;
+  ? `${API_BASE}/api/templates/template?template_id=${encodeURIComponent(form.id)}`
+  : `${API_BASE}/api/templates/template`;
 
     // ✅ Send template_id when updating
     const body = form.id
