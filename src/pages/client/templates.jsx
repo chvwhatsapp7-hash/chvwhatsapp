@@ -50,17 +50,31 @@ export default function TemplatesPage() {
   }, [form.message_body]);
 
   async function fetchTemplates() {
-    try {
-      const res = await fetch(`${API_BASE}/api/templates/template`, { credentials: 'include' });
-      if (!res.ok) throw new Error(res.statusText);
-      const data = await res.json();
-      setTemplates(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('fetchTemplates error', err);
-      setTemplates([]);
-    }
-  }
+  try {
+    const res = await fetch(`${API_BASE}/api/templates/template`, {
+      credentials: "include",
+    });
 
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    console.log("RAW API DATA:", data);
+
+    // ✅ CORRECT extraction
+    const templatesArray = Array.isArray(data?.data) ? data.data.map(t=>({
+      ...t,
+      id:t.template_id,
+    }))
+    : [];
+
+    console.log("Setting templates:", templatesArray);
+    setTemplates(templatesArray);
+
+  } catch (err) {
+    console.error("fetchTemplates error", err);
+    setTemplates([]);
+  }
+}
   function updateField(key, value) {
     setForm(prev => ({ ...prev, [key]: value }));
   }
@@ -124,66 +138,92 @@ export default function TemplatesPage() {
     return null;
   }
 
-  async function saveTemplate(e) {
-    e?.preventDefault();
-    const err = validateTemplate(form);
-    if (err) return window.alert(err);
+async function saveTemplate(e) {
+  e?.preventDefault();
 
-    try {
-      const method = form.id ? "PUT" : "POST";
-      const endpoint = form.id
-        ? `${API_BASE}/api/templates/template?id=${encodeURIComponent(form.id)}`
-        : `${API_BASE}/api/templates/template`;
+  const err = validateTemplate(form);
+  if (err) return window.alert(err);
 
-      const res = await fetch(endpoint, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+  try {
+    const method = form.id ? "PUT" : "POST";
+    const endpoint = form.id
+      ? `${API_BASE}/api/templates/template?id=${encodeURIComponent(form.id)}`
+      : `${API_BASE}/api/templates/template`;
 
-      if (!res.ok) {
-        const txt = await res.text();
-        console.error('saveTemplate failed', res.status, txt);
-        return window.alert('Save failed: ' + res.status);
-      }
+    // ✅ Send template_id when updating
+    const body = form.id
+      ? { ...form, template_id: form.id } // backend requires template_id
+      : form;
 
-      const data = await res.json();
-      window.alert(data.message || 'Saved');
-      setForm(emptyTemplate);
-      setEditing(false);
-      await fetchTemplates();
-    } catch (err) {
-      console.error('saveTemplate error', err);
-      window.alert('Save failed');
-    }
-  }
-
-  function startEdit(t) {
-    setForm({
-      ...emptyTemplate,
-      ...t,
-      buttons: t.buttons || [],
-      variables: t.variables || {},
-      variable_count: t.variable_count || 0,
+    const res = await fetch(endpoint, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body),
     });
-    setEditing(true);
-  }
 
-  async function deleteTemplate(id) {
-    if (!window.confirm('Delete template?')) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/templates/template?id=${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' });
-      if (!res.ok) return window.alert('Delete failed: ' + res.status);
-      const js = await res.json();
-      window.alert(js.message || 'Deleted');
-      await fetchTemplates();
-    } catch (err) {
-      console.error('deleteTemplate error', err);
-      window.alert('Delete failed');
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("saveTemplate failed", res.status, txt);
+      return window.alert("Save failed: " + res.status);
     }
-  }
 
+    const data = await res.json();
+    window.alert(data.message || "Saved");
+
+    // ✅ Update existing template in state if editing
+    if (form.id) {
+      setTemplates(prev =>
+        prev.map(t => (t.id === form.id ? { ...t, ...form } : t))
+      );
+    } else {
+      // New template → refetch list
+      await fetchTemplates();
+    }
+
+    // Reset form & editing state
+    setForm(emptyTemplate);
+    setEditing(false);
+
+  } catch (err) {
+    console.error("saveTemplate error", err);
+    window.alert("Save failed");
+  }
+}
+  function startEdit(t) {
+  setForm({
+    ...emptyTemplate,
+    ...t,
+    id: t.id, // for frontend logic
+    template_id: t.id, // required by backend
+    buttons: t.buttons || [],
+    variables: t.variables || {},
+    variable_count: t.variable_count || 0,
+  });
+  setEditing(true);
+}
+  async function deleteTemplate(id) {
+  if (!window.confirm('Delete template?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/templates/template?template_id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error('Delete failed', res.status, txt);
+      return window.alert('Delete failed: ' + res.status);
+    }
+
+    const js = await res.json();
+    window.alert(js.message || 'Deleted');
+    await fetchTemplates();
+  } catch (err) {
+    console.error('deleteTemplate error', err);
+    window.alert('Delete failed');
+  }
+}
   async function submitForApproval(id) {
     try {
       const res = await fetch(`${API_BASE}/api/submit?id=${encodeURIComponent(id)}`, { method: 'POST', credentials: 'include' });
@@ -235,14 +275,14 @@ export default function TemplatesPage() {
                 onClick={() => startEdit(t)}
               >
                 <div className="wa-item-header">
-                  <strong>{t.name || 'Untitled Template'}</strong>
+                  <strong>{t.template_name || 'Untitled Template'}</strong>
                   <span className={`wa-status-badge ${getStatusColor(t.status)}`}>{t.status}</span>
                 </div>
                 <div className="wa-item-meta">
                   {t.category} • {t.language.toUpperCase()}
                 </div>
                 <div className="wa-item-body-preview">
-                  {(t.body ?? '').substring(0, 60)}{(t.body ?? '').length > 60 ? '...' : ''}
+                  {(t.message_body ?? '').substring(0, 60)}{(t.body ?? '').length > 60 ? '...' : ''}
                 </div>
                 <div className="wa-item-actions">
                   <button title="Edit" onClick={(e) => {e.stopPropagation(); startEdit(t);}}>
@@ -270,8 +310,7 @@ export default function TemplatesPage() {
                   <h2>{form.id ? 'Edit Template' : 'New Template'}</h2>
                   <div className="wa-actions-group">
                     <button type="button" className="wa-btn wa-btn-ghost" onClick={() => { setForm(emptyTemplate); setEditing(false); }}>Cancel</button>
-                    <button type="submit" className="wa-btn wa-btn-primary">Save & Submit</button>
-                  </div>
+                    <button type="submit" className="wa-btn wa-btn-primary">{form.id ? "Update Template" : "Create Template"}</button>                  </div>
                 </div>
 
                 <div className="wa-form-content">
@@ -320,16 +359,16 @@ export default function TemplatesPage() {
                   <div className="wa-field-group">
                     <label>Header (Optional)</label>
                     <div className="wa-input-with-select">
-                      <select className="prefix-select" value={form.headerType ?? 'Text'} onChange={e => updateField('headerType', e.target.value)}>
+                      <select className="prefix-select" value={form.header_type ?? 'Text'} onChange={e => updateField('header_type', e.target.value)}>
                         <option>Text</option>
                         <option>Image</option>
                         <option>Video</option>
                         <option>Document</option>
                       </select>
-                      {form.headerType === 'Text' ? (
+                      {form.header_type === 'Text' ? (
                         <input 
-                          value={form.headerText ?? ''} 
-                          onChange={e => updateField('headerText', e.target.value)} 
+                          value={form.header_text ?? ''} 
+                          onChange={e => updateField('header_text', e.target.value)} 
                           placeholder="Header text..." 
                         />
                       ) : (
@@ -338,7 +377,7 @@ export default function TemplatesPage() {
                              <Icons.Upload /> {uploading ? 'Uploading...' : 'Choose File'}
                            </button>
                            <input ref={fileRef} type="file" onChange={handleUpload} style={{display:'none'}} />
-                           {form.headerMediaUrl && <span className="file-status">File uploaded</span>}
+                           {form.header_media_url && <span className="file-status">File uploaded</span>}
                         </div>
                       )}
                     </div>
@@ -407,16 +446,16 @@ export default function TemplatesPage() {
                             <div className="wa-message-body">
                             
                             {/* Header */}
-                            {form.headerType === 'Text' && form.headerText && (
-                                <div className="msg-header-text">{form.headerText}</div>
+                            {form.header_type === 'Text' && form.header_text && (
+                                <div className="msg-header-text">{form.header_text}</div>
                             )}
-                            {form.headerType !== 'Text' && (
+                            {form.header_type !== 'Text' && (
                                 <div className="msg-header-media">
-                                {form.headerMediaUrl ? (
-                                    form.headerType === 'Image' ? (
-                                    <img src={form.headerMediaUrl} alt="Header" style={{width:'100%', display:'block'}} />
+                                {form.header_media_url ? (
+                                    form.header_type === 'Image' ? (
+                                    <img src={form.header_media_url} alt="Header" style={{width:'100%', display:'block'}} />
                                     ) : (
-                                    <div className="media-placeholder filled">{form.headerType} Attached</div>
+                                    <div className="media-placeholder filled">{form.header_type} Attached</div>
                                     )
                                 ) : (
                                     <div className="media-placeholder">No Media</div>
