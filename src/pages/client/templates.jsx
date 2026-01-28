@@ -29,7 +29,7 @@ export default function TemplatesPage() {
     buttons: [],
     variables: {},
     variable_count: 0,
-    status: "draft",
+    status: "DRAFT",
   };
 
   const [templates, setTemplates] = useState([]);
@@ -267,37 +267,99 @@ async function saveTemplate(e) {
           </div>
 
           <div className="wa-list-container">
-            {templates.length === 0 && <div className="wa-empty-state">No templates found.</div>}
-            {templates.map(t => (
-              <div 
-                className={`wa-list-item ${form.id === t.id ? 'active' : ''}`} 
-                key={t.id} 
-                onClick={() => startEdit(t)}
-              >
-                <div className="wa-item-header">
-                  <strong>{t.template_name || 'Untitled Template'}</strong>
-                  <span className={`wa-status-badge ${getStatusColor(t.status)}`}>{t.status}</span>
-                </div>
-                <div className="wa-item-meta">
-                  {t.category} • {t.language.toUpperCase()}
-                </div>
-                <div className="wa-item-body-preview">
-                  {(t.message_body ?? '').substring(0, 60)}{(t.body ?? '').length > 60 ? '...' : ''}
-                </div>
-                <div className="wa-item-actions">
-                  <button title="Edit" onClick={(e) => {e.stopPropagation(); startEdit(t);}}>
-                    <Icons.Edit />
-                  </button>
-                  <button title="Submit" onClick={(e) => {e.stopPropagation(); submitForApproval(t.id);}}>
-                    <Icons.Send />
-                  </button>
-                  <button title="Delete" className="danger" onClick={(e) => {e.stopPropagation(); deleteTemplate(t.id);}}>
-                    <Icons.Trash />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+  {templates.length === 0 && (
+    <div className="wa-empty-state">No templates found.</div>
+  )}
+
+  {templates.map((t) => (
+  <div
+    key={t.id}
+    id={`template-${t.id}`}
+    className={`wa-draft-item ${form.id === t.id ? "active" : ""}`}
+    onClick={() => startEdit(t)}
+  >
+    {/* ===== Template Meta (Professional Sidebar UI) ===== */}
+    <div className="wa-draft-meta">
+      <div className="wa-draft-title">
+        {t.template_name || "Untitled Template"}
+      </div>
+
+      <div className="wa-draft-sub" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+  <span className="wa-draft-status-text" style={{ textTransform: 'uppercase' }}>
+    <strong>{t.status}</strong>
+  </span>
+</div>
+    </div>
+
+    {/* ===== WhatsApp Bubble (UNCHANGED UI) ===== */}
+    <div className={`wa-chat-bubble ${form.id === t.id ? "active" : ""}`}>
+      {/* Header preview */}
+      {t.header_type === "text" && t.header_text && (
+        <div className="wa-draft-header-preview">
+          {t.header_text}
+        </div>
+        
+      )}
+
+      {t.header_type !== "text" && t.header_media_url && (
+        <div className="wa-draft-media-preview">
+          {t.header_type.toUpperCase()} attached
+        </div>
+      )}
+      
+
+      {/* Body */}
+      <div className="wa-chat-body">
+        {(t.message_body ?? "").substring(0, 120)}
+        {(t.message_body ?? "").length > 120 ? "…" : ""}
+      </div>
+
+      {/* Footer */}
+      <div className="wa-chat-footer">
+        <div className="wa-chat-meta">
+          <span
+            className="wa-status-dot"
+            style={{ background: getStatusColor() }}
+          />
+          
+        </div>
+
+        <div className="wa-chat-actions">
+          <button
+            title="Edit"
+            onClick={(e) => {
+              e.stopPropagation();
+              startEdit(t);
+            }}
+          >
+            <Icons.Edit />
+          </button>
+
+          <button
+            title="Submit"
+            onClick={(e) => {
+              e.stopPropagation();
+              submitForApproval(t.id);
+            }}
+          >
+            <Icons.Send />
+          </button>
+
+          <button
+            title="Delete"
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteTemplate(t.id);
+            }}
+          >
+            <Icons.Trash />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+))}
+</div>
         </aside>
 
         {/* Right Content: Editor */}
@@ -412,15 +474,32 @@ async function saveTemplate(e) {
                       {(form.buttons || []).map((b, i) => (
                         <div className="wa-button-row" key={i}>
                           <div className="wa-button-inputs">
-                            <select value={b.type ?? 'url'} onChange={e => updateButton(i, 'type', e.target.value)}>
-                                <option value="url">Visit Website</option>
-                                <option value="call">Call Number</option>
-                                <option value="quick_reply">Quick Reply</option>
-                                <option value="copy">Copy Code</option>
-                            </select>
-                            <input placeholder="Label" value={b.text ?? ''} onChange={e => updateButton(i, 'text', e.target.value)} />
-                            <input placeholder={b.type === 'url' ? 'https://...' : 'Action payload/number'} value={b.payload ?? ''} onChange={e => updateButton(i, 'payload', e.target.value)} />
-                          </div>
+  <select
+    value={b.button_type}
+    onChange={e => updateButton(i, 'button_type', e.target.value)}
+  >
+    <option value="url">Visit Website</option>
+    <option value="call">Call Number</option>
+    <option value="quick_reply">Quick Reply</option>
+    <option value="copy">Copy Code</option>
+  </select>
+
+  <input
+    placeholder="Label"
+    value={b.button_text || ''}
+    onChange={e => updateButton(i, 'button_text', e.target.value)}
+  />
+
+  <input
+    placeholder={
+      b.button_type === 'url'
+        ? 'https://example.com'
+        : 'Action value / phone number'
+    }
+    value={b.button_value || ''}
+    onChange={e => updateButton(i, 'button_value', e.target.value)}
+  />
+</div>
                           <button type="button" className="wa-icon-btn danger" onClick={() => removeButton(i)}>
                             <Icons.Trash />
                           </button>
@@ -481,13 +560,14 @@ async function saveTemplate(e) {
                             {(form.buttons || []).length > 0 && (
                             <div className="wa-message-actions">
                                 {(form.buttons || []).map((b, i) => (
-                                <div key={i} className="msg-action-btn">
-                                    {b.type === 'url' && <span className="btn-icon">↗</span>}
-                                    {b.type === 'call' && <span className="btn-icon">📞</span>}
-                                    {b.type === 'copy' && <span className="btn-icon">📋</span>}
-                                    {b.text || 'Button'}
-                                </div>
-                                ))}
+  <div key={i} className="msg-action-btn">
+    {b.button_type === 'url' && <span className="btn-icon">↗</span>}
+    {b.button_type === 'call' && <span className="btn-icon">📞</span>}
+    {b.button_type === 'copy' && <span className="btn-icon">📋</span>}
+    {b.button_type === 'quick_reply' && <span className="btn-icon">💬</span>}
+    {b.button_text || 'Button'}
+  </div>
+))}
                             </div>
                             )}
                         </div>
@@ -579,19 +659,21 @@ async function saveTemplate(e) {
 
         /* Layout Grid */
         .wa-layout {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            height: calc(100vh - 74px);
-            overflow: hidden;
-        }
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: calc(100vh - 74px);
+  overflow: hidden;
+}
 
         /* Sidebar */
         .wa-sidebar {
-            background: var(--wa-white);
-            border-right: 1px solid var(--wa-border);
-            display: flex;
-            flex-direction: column;
-        }
+  background: var(--wa-white);
+  border-right: 1px solid var(--wa-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;   /* 🔥 THIS IS THE FIX */
+  overflow: hidden;
+}
         .wa-search-box {
             padding: 16px;
             border-bottom: 1px solid var(--wa-border);
@@ -604,7 +686,7 @@ async function saveTemplate(e) {
             border-radius: 6px; border: 1px solid var(--wa-border); background: var(--wa-bg);
             outline: none;
         }
-        .wa-list-container { flex: 1; overflow-y: auto; }
+        
         .wa-list-item {
             padding: 16px; border-bottom: 1px solid var(--wa-border); cursor: pointer; transition: background 0.1s;
         }
@@ -791,6 +873,157 @@ async function saveTemplate(e) {
             .wa-preview-panel { padding-top: 0; }
             .wa-sticky-preview { position: static; }
         }
+            /* WhatsApp draft list background */
+.wa-list-container {
+  flex: 1;                   /* fills left column */
+  background: #efeae2;
+  padding: 12px;
+  overflow-y: auto;        /* FORCE scrollbar */
+  overflow-x: hidden;
+}
+
+/* Chat bubble */
+.wa-chat-bubble {
+  background: #dcf8c6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  max-width: 92%;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  cursor: pointer;
+  position: relative;
+}
+
+.wa-chat-bubble.active {
+  outline: 2px solid var(--wa-primary);
+}
+
+/* Header */
+.wa-chat-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #075e54;
+}
+
+.wa-chat-label {
+  font-weight: 500;
+  color: #667781;
+}
+
+/* Body */
+.wa-chat-body {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #111b21;
+  white-space: pre-wrap;
+}
+
+.wa-draft-header-preview {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111b21;
+  margin-bottom: 4px;
+}
+
+.wa-draft-media-preview {
+  font-size: 12px;
+  color: #075e54;
+  background: rgba(0, 128, 105, 0.1);
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  width: fit-content;
+}
+
+/* Footer */
+.wa-chat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #667781;
+}
+
+.wa-chat-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wa-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Actions */
+.wa-chat-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.wa-chat-actions button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #54656f;
+}
+
+.wa-chat-actions button:hover {
+  color: var(--wa-primary);
+}
+  .wa-draft-item {
+  background: #fcf8f8;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #e9edef;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wa-draft-item:hover {
+  background: #f7f9fa;
+}
+
+.wa-draft-item.active {
+  box-shadow: 0 0 0 2px var(--wa-primary);
+}
+  .wa-draft-meta {
+  padding: 4px 6px 8px;
+}
+
+.wa-draft-title {
+  font-size: 23px;
+  font-weight: 600;
+  color: #111b21;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-draft-sub {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #667781;
+}
+
+.wa-draft-lang {
+  font-weight: 500;
+}
+
+.wa-draft-status-text {
+  text-transform: capitalize;
+}
+  .wa-draft-item .wa-chat-bubble {
+  margin: 0;
+}
       `}</style>
     </div>
   );
