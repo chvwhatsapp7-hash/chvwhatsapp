@@ -14,7 +14,6 @@ import Templates from './pages/client/templates'
 import Contacts from './pages/client/contacts';
 import Reports from './pages/client/reports';
 import ClientProfile from './pages/client/profile'
-import ResetPasswordPage from './pages/auth/resetpassword';
 
 // A component to protect routes
 const PrivateRoute = ({ children, role }) => {
@@ -38,8 +37,6 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/resetpassword" element={<ResetPasswordPage />} />    
-
 
         {/* Admin Routes */}
         <Route
@@ -104,7 +101,7 @@ function App() {
               <ClientProfile />
             </PrivateRoute>
           }
-        />  
+        />      
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />
