@@ -20,7 +20,7 @@ export default function TemplatesPage() {
     template_name: "",
     category: "Utility",
     language: "en",
-    template_type: "Custom",
+    template_type: "custom",
     header_type: "text",
     header_text: "",
     header_media_url: "",
@@ -28,8 +28,7 @@ export default function TemplatesPage() {
     footer_text: "",
     buttons: [],
     variables: {},
-    variable_count: 0,
-    status: "DRAFT",
+    variable_count: 0
   };
 
   const [templates, setTemplates] = useState([]);
@@ -224,27 +223,7 @@ async function saveTemplate(e) {
     window.alert('Delete failed');
   }
 }
-  async function submitForApproval(id) {
-    try {
-      const res = await fetch(`${API_BASE}/api/submit?id=${encodeURIComponent(id)}`, { method: 'POST', credentials: 'include' });
-      if (!res.ok) return window.alert('Submit failed: ' + res.status);
-      const js = await res.json();
-      window.alert(js.message || 'Submitted for approval');
-      await fetchTemplates();
-    } catch (err) {
-      console.error('submitForApproval error', err);
-      window.alert('Submit failed');
-    }
-  }
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'approved': return 'status-success';
-      case 'rejected': return 'status-error';
-      case 'submitted': return 'status-warning';
-      default: return 'status-neutral';
-    }
-  };
 
   return (
     <div className="wa-page-root">
@@ -276,7 +255,7 @@ async function saveTemplate(e) {
     key={t.id}
     id={`template-${t.id}`}
     className={`wa-draft-item ${form.id === t.id ? "active" : ""}`}
-    onClick={() => startEdit(t)}
+    onClick={() => setForm(prev => ({ ...prev, id: t.id }))}
   >
     {/* ===== Template Meta (Professional Sidebar UI) ===== */}
     <div className="wa-draft-meta">
@@ -284,11 +263,7 @@ async function saveTemplate(e) {
         {t.template_name || "Untitled Template"}
       </div>
 
-      <div className="wa-draft-sub" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-  <span className="wa-draft-status-text" style={{ textTransform: 'uppercase' }}>
-    <strong>{t.status}</strong>
-  </span>
-</div>
+      
     </div>
 
     {/* ===== WhatsApp Bubble (UNCHANGED UI) ===== */}
@@ -317,10 +292,7 @@ async function saveTemplate(e) {
       {/* Footer */}
       <div className="wa-chat-footer">
         <div className="wa-chat-meta">
-          <span
-            className="wa-status-dot"
-            style={{ background: getStatusColor() }}
-          />
+          
           
         </div>
 
@@ -335,15 +307,7 @@ async function saveTemplate(e) {
             <Icons.Edit />
           </button>
 
-          <button
-            title="Submit"
-            onClick={(e) => {
-              e.stopPropagation();
-              submitForApproval(t.id);
-            }}
-          >
-            <Icons.Send />
-          </button>
+          
 
           <button
             title="Delete"
@@ -407,7 +371,7 @@ async function saveTemplate(e) {
                     </div>
                     <div className="wa-field-group">
                       <label>Type</label>
-                      <select value={form.templateType ?? 'Custom'} onChange={e => updateField('templateType', e.target.value)}>
+                      <select value={form.template_type ?? 'custom'} onChange={e => updateField('template_type', e.target.value)}>
                         <option>Custom</option>
                         <option>Product-Catalog</option>
                         <option>Limited-Time-Offer</option>
@@ -420,29 +384,45 @@ async function saveTemplate(e) {
 
                   <div className="wa-field-group">
                     <label>Header (Optional)</label>
-                    <div className="wa-input-with-select">
-                      <select className="prefix-select" value={form.header_type ?? 'Text'} onChange={e => updateField('header_type', e.target.value)}>
-                        <option>Text</option>
-                        <option>Image</option>
-                        <option>Video</option>
-                        <option>Document</option>
-                      </select>
-                      {form.header_type === 'Text' ? (
-                        <input 
-                          value={form.header_text ?? ''} 
-                          onChange={e => updateField('header_text', e.target.value)} 
-                          placeholder="Header text..." 
-                        />
-                      ) : (
-                        <div className="wa-file-upload-wrapper">
-                           <button type="button" className="wa-btn-upload" onClick={() => fileRef.current.click()}>
-                             <Icons.Upload /> {uploading ? 'Uploading...' : 'Choose File'}
-                           </button>
-                           <input ref={fileRef} type="file" onChange={handleUpload} style={{display:'none'}} />
-                           {form.header_media_url && <span className="file-status">File uploaded</span>}
-                        </div>
-                      )}
-                    </div>
+                    <div className="wa-header-row">
+  <select
+    className="wa-header-type"
+    value={form.header_type ?? 'text'}
+    onChange={e => updateField('header_type', e.target.value)}
+  >
+    <option value="text">Text</option>
+    <option value="image">Image</option>
+    <option value="video">Video</option>
+    <option value="document">Document</option>
+  </select>
+
+  {form.header_type === 'text' ? (
+    <textarea
+      className="wa-header-input"
+      value={form.header_text ?? ''}
+      onChange={e => updateField('header_text', e.target.value)}
+      placeholder="Header text..."
+      rows={2}
+    />
+  ) : (
+    <div
+  className="wa-header-file-box"
+  onClick={() => fileRef.current.click()}
+>
+  <Icons.Upload />
+  <span>
+    {uploading ? 'Uploading...' : 'Choose file'}
+  </span>
+
+  <input
+    ref={fileRef}
+    type="file"
+    onChange={handleUpload}
+    hidden
+  />
+</div>
+  )}
+</div>
                   </div>
 
                   <div className="wa-field-group">
@@ -465,7 +445,7 @@ async function saveTemplate(e) {
 
                   <div className="wa-field-group">
                     <label>Footer (Optional)</label>
-                    <input value={form.footer ?? ''} onChange={e => updateField('footer', e.target.value)} placeholder="e.g. Reply STOP to unsubscribe" />
+                    <input value={form.footer_text ?? ''} onChange={e => updateField('footer_text', e.target.value)} placeholder="e.g. Reply STOP to unsubscribe" />
                   </div>
 
                   <div className="wa-field-group">
@@ -525,13 +505,13 @@ async function saveTemplate(e) {
                             <div className="wa-message-body">
                             
                             {/* Header */}
-                            {form.header_type === 'Text' && form.header_text && (
+                            {form.header_type === 'text' && form.header_text && (
                                 <div className="msg-header-text">{form.header_text}</div>
                             )}
-                            {form.header_type !== 'Text' && (
+                            {form.header_type !== 'text' && (
                                 <div className="msg-header-media">
                                 {form.header_media_url ? (
-                                    form.header_type === 'Image' ? (
+                                    form.header_type === 'image' ? (
                                     <img src={form.header_media_url} alt="Header" style={{width:'100%', display:'block'}} />
                                     ) : (
                                     <div className="media-placeholder filled">{form.header_type} Attached</div>
@@ -550,7 +530,7 @@ async function saveTemplate(e) {
                             </div>
 
                             {/* Footer */}
-                            {form.footer && <div className="msg-footer">{form.footer}</div>}
+                            {form.footer_text && <div className="msg-footer">{form.footer_text}</div>}
                             
                             {/* Timestamp */}
                             <div className="msg-meta">12:00 PM</div>
@@ -953,13 +933,6 @@ async function saveTemplate(e) {
   align-items: center;
   gap: 6px;
 }
-
-.wa-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
 /* Actions */
 .wa-chat-actions {
   display: flex;
@@ -1023,6 +996,57 @@ async function saveTemplate(e) {
 }
   .wa-draft-item .wa-chat-bubble {
   margin: 0;
+}
+  /* Header field sizing fix */
+.wa-header-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.wa-header-type {
+  width: 150px;
+  height: 44px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.wa-header-input {
+  flex: 1;
+  min-height: 56px;
+  max-height: 80px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  resize: vertical;
+}
+  /* File upload same size as header text box */
+.wa-header-file-box {
+  flex: 1;
+  min-height: 56px;
+  max-height: 80px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 14px;
+  color: #475569;
+
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.wa-header-file-box:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
 }
       `}</style>
     </div>
