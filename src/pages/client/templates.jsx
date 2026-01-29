@@ -1025,29 +1025,7 @@ async function saveTemplate(e) {
   border-radius: 6px;
   resize: vertical;
 }
-  /* File upload same size as header text box */
-.wa-header-file-box {
-  flex: 1;
-  min-height: 56px;
-  max-height: 80px;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  font-size: 14px;
-  color: #475569;
-
-  border: 1px dashed #cbd5e1;
-  border-radius: 6px;
-  cursor: pointer;
-  background: #fff;
-}
-
-.wa-header-file-box:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-}
+  
       `}</style>
     </div>
   );
