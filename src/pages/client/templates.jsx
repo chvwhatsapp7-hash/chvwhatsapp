@@ -17,18 +17,19 @@ const Icons = {
 export default function TemplatesPage() {
   const emptyTemplate = {
     id: null,
-    name: '',
-    category: 'Utility',
-    language: 'en',
-    templateType: 'Custom',
-    headerType: 'Text',
-    headerText: '',
-    headerMediaUrl: '',
-    body: '',
-    footer: '',
+    template_name: "",
+    category: "Utility",
+    language: "en",
+    template_type: "Custom",
+    header_type: "text",
+    header_text: "",
+    header_media_url: "",
+    message_body: "",
+    footer_text: "",
     buttons: [],
-    placeholders: [],
-    status: 'draft',
+    variables: {},
+    variable_count: 0,
+    status: "DRAFT",
   };
 
   const [templates, setTemplates] = useState([]);
@@ -38,171 +39,195 @@ export default function TemplatesPage() {
   const [charCount, setCharCount] = useState(0);
   const fileRef = useRef(null);
 
+  // Fetch templates on load
   useEffect(() => {
     fetchTemplates();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update char count
   useEffect(() => {
-    setCharCount((form.body || '').length);
-  }, [form.body]);
+    setCharCount((form.message_body || '').length);
+  }, [form.message_body]);
 
   async function fetchTemplates() {
-    try {
-      const res = await fetch(`${API_BASE}/api/templates`);
-      if (!res.ok) {
-        console.error('Templates API returned', res.status);
-        setTemplates([]);
-        return;
-      }
-      const data = await res.json();
-      setTemplates(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('fetchTemplates error', err);
-      setTemplates([]);
-    }
-  }
+  try {
+    const res = await fetch(`${API_BASE}/api/templates/template`, {
+      credentials: "include",
+    });
 
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    console.log("RAW API DATA:", data);
+
+    // ✅ CORRECT extraction
+    const templatesArray = Array.isArray(data?.data) ? data.data.map(t=>({
+      ...t,
+      id:t.template_id,
+    }))
+    : [];
+
+    console.log("Setting templates:", templatesArray);
+    setTemplates(templatesArray);
+
+  } catch (err) {
+    console.error("fetchTemplates error", err);
+    setTemplates([]);
+  }
+}
   function updateField(key, value) {
     setForm(prev => ({ ...prev, [key]: value }));
   }
 
   function addPlaceholder() {
-    const next = (form.placeholders?.length || 0) + 1;
-    updateField('body', (form.body || '') + ` {{${next}}}`);
-    updateField('placeholders', [...(form.placeholders || []), `{{${next}}}`]);
+    const next = form.variable_count + 1;
+    updateField("message_body", `${form.message_body || ""} {{${next}}}`);
+    updateField("variables", { ...form.variables, [next]: "" });
+    updateField("variable_count", next);
   }
 
   function addButton() {
-    updateField('buttons', [...(form.buttons || []), { type: 'url', text: '', payload: '' }]);
+    updateField("buttons", [...form.buttons, { button_type: "quick_reply", button_text: "", button_value: null }]);
   }
 
   function updateButton(i, key, value) {
-    const b = [...(form.buttons || [])];
+    const b = [...form.buttons];
     b[i] = { ...b[i], [key]: value };
-    updateField('buttons', b);
+    updateField("buttons", b);
   }
 
   function removeButton(i) {
-    const b = (form.buttons || []).filter((_, idx) => idx !== i);
-    updateField('buttons', b);
+    const b = form.buttons.filter((_, idx) => idx !== i);
+    updateField("buttons", b);
   }
 
-    async function handleUpload(e) {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
+  async function handleUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-        // 1. Create a Fake Local URL immediately so the preview works
-        const localUrl = URL.createObjectURL(file);
-        const type = file.type.startsWith('image/') ? 'Image' : file.type.startsWith('video/') ? 'Video' : 'Document';
+    const localUrl = URL.createObjectURL(file);
+    const type = file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : "document";
 
-        // 2. Set state immediately (This makes the image appear)
-        setForm(prev => ({
-        ...prev,
-        headerMediaUrl: localUrl,
-        headerType: type
-        }));
+    updateField("header_media_url", localUrl);
+    updateField("header_type", type);
 
-        // 3. Try to upload to backend (Silent fail if backend is 404)
-        setUploading(true);
-        const fd = new FormData();
-        fd.append('file', file);
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
 
-        try {
-        const res = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: fd });
-        if (res.ok) {
-            const js = await res.json();
-            // If upload succeeds, swap local URL for the real server URL
-            updateField('headerMediaUrl', js.url); 
-        } else {
-            console.warn("Backend upload failed (404). Keeping local preview.");
-        }
-        } catch (err) {
-        console.error("Network error during upload.", err);
-        } finally {
-        setUploading(false);
-        }
+    try {
+      const res = await fetch(`${API_BASE}/api/upload`, { method: "POST", body: fd, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const js = await res.json();
+      updateField("header_media_url", js.url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
     }
+  }
 
   function validateTemplate(t) {
-    if (!t.name) return 'Template name required.';
-    if (!t.body) return 'Body cannot be empty.';
-    if ((t.body || '').length > 1024) return 'Body exceeds 1024 characters.';
-    if (t.footer && t.footer.length > 60) return 'Footer exceeds 60 characters.';
-    if (t.headerType === 'Text' && t.headerText && t.headerText.length > 60) return 'Header text length must be <= 60.';
-    if (t.buttons && t.buttons.length > 10) return 'Up to 10 buttons allowed.';
-    for (const b of (t.buttons || [])) {
-      if (!b.text) return 'Each button needs text.';
-    }
+    if (!t.template_name) return "Template name required";
+    if (!t.message_body) return "Message body required";
+    if (t.message_body.length > 1024) return "Body exceeds 1024 chars";
+    if (t.footer_text && t.footer_text.length > 60) return "Footer exceeds 60 chars";
+    if (t.header_type === "text" && t.header_text && t.header_text.length > 60) return "Header text max 60 chars";
+    if (t.buttons && t.buttons.length > 10) return "Max 10 buttons allowed";
+    for (const b of t.buttons) if (!b.button_text) return "Each button needs text";
     return null;
   }
 
-  async function saveTemplate(e) {
-    e && e.preventDefault();
-    const err = validateTemplate(form);
-    if (err) {
-      window.alert(err);
-      return;
-    }
-    try {
-      const method = form.id ? 'PUT' : 'POST';
-      const endpoint = form.id ? `${API_BASE}/api/templates?id=${encodeURIComponent(form.id)}` : `${API_BASE}/api/templates`;
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        console.error('saveTemplate failed', res.status, txt);
-        window.alert('Save failed: ' + res.status);
-        return;
-      }
-      const data = await res.json();
-      window.alert(data.message || 'Saved');
-      setForm(emptyTemplate);
-      setEditing(false);
-      await fetchTemplates();
-    } catch (err) {
-      console.error('saveTemplate error', err);
-      window.alert('Save failed');
-    }
-  }
+async function saveTemplate(e) {
+  e?.preventDefault();
 
-  function startEdit(template) {
-    setForm({
-      ...emptyTemplate,
-      ...template,
-      buttons: template.buttons || [],
-      placeholders: template.placeholders || [],
+  const err = validateTemplate(form);
+  if (err) return window.alert(err);
+
+  try {
+    const method = form.id ? "PUT" : "POST";
+    const endpoint = form.id
+  ? `${API_BASE}/api/templates/template?template_id=${encodeURIComponent(form.id)}`
+  : `${API_BASE}/api/templates/template`;
+
+    // ✅ Send template_id when updating
+    const body = form.id
+      ? { ...form, template_id: form.id } // backend requires template_id
+      : form;
+
+    const res = await fetch(endpoint, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body),
     });
-    setEditing(true);
-  }
 
-  async function deleteTemplate(id) {
-    if (!window.confirm('Delete template?')) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/templates?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-      if (!res.ok) {
-        window.alert('Delete failed: ' + res.status);
-        return;
-      }
-      const js = await res.json();
-      window.alert(js.message || 'Deleted');
-      await fetchTemplates();
-    } catch (err) {
-      console.error('deleteTemplate error', err);
-      window.alert('Delete failed');
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("saveTemplate failed", res.status, txt);
+      return window.alert("Save failed: " + res.status);
     }
-  }
 
+    const data = await res.json();
+    window.alert(data.message || "Saved");
+
+    // ✅ Update existing template in state if editing
+    if (form.id) {
+      setTemplates(prev =>
+        prev.map(t => (t.id === form.id ? { ...t, ...form } : t))
+      );
+    } else {
+      // New template → refetch list
+      await fetchTemplates();
+    }
+
+    // Reset form & editing state
+    setForm(emptyTemplate);
+    setEditing(false);
+
+  } catch (err) {
+    console.error("saveTemplate error", err);
+    window.alert("Save failed");
+  }
+}
+  function startEdit(t) {
+  setForm({
+    ...emptyTemplate,
+    ...t,
+    id: t.id, // for frontend logic
+    template_id: t.id, // required by backend
+    buttons: t.buttons || [],
+    variables: t.variables || {},
+    variable_count: t.variable_count || 0,
+  });
+  setEditing(true);
+}
+  async function deleteTemplate(id) {
+  if (!window.confirm('Delete template?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/templates/template?template_id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error('Delete failed', res.status, txt);
+      return window.alert('Delete failed: ' + res.status);
+    }
+
+    const js = await res.json();
+    window.alert(js.message || 'Deleted');
+    await fetchTemplates();
+  } catch (err) {
+    console.error('deleteTemplate error', err);
+    window.alert('Delete failed');
+  }
+}
   async function submitForApproval(id) {
     try {
-      const res = await fetch(`${API_BASE}/api/submit?id=${encodeURIComponent(id)}`, { method: 'POST' });
-      if (!res.ok) {
-        window.alert('Submit failed: ' + res.status);
-        return;
-      }
+      const res = await fetch(`${API_BASE}/api/submit?id=${encodeURIComponent(id)}`, { method: 'POST', credentials: 'include' });
+      if (!res.ok) return window.alert('Submit failed: ' + res.status);
       const js = await res.json();
       window.alert(js.message || 'Submitted for approval');
       await fetchTemplates();
@@ -212,7 +237,6 @@ export default function TemplatesPage() {
     }
   }
 
-  // Helper to format date if needed, or just display status nicely
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'approved': return 'status-success';
@@ -243,37 +267,99 @@ export default function TemplatesPage() {
           </div>
 
           <div className="wa-list-container">
-            {templates.length === 0 && <div className="wa-empty-state">No templates found.</div>}
-            {templates.map(t => (
-              <div 
-                className={`wa-list-item ${form.id === t.id ? 'active' : ''}`} 
-                key={t.id} 
-                onClick={() => startEdit(t)}
-              >
-                <div className="wa-item-header">
-                  <strong>{t.name || 'Untitled Template'}</strong>
-                  <span className={`wa-status-badge ${getStatusColor(t.status)}`}>{t.status}</span>
-                </div>
-                <div className="wa-item-meta">
-                  {t.category} • {t.language.toUpperCase()}
-                </div>
-                <div className="wa-item-body-preview">
-                  {(t.body ?? '').substring(0, 60)}{(t.body ?? '').length > 60 ? '...' : ''}
-                </div>
-                <div className="wa-item-actions">
-                  <button title="Edit" onClick={(e) => {e.stopPropagation(); startEdit(t);}}>
-                    <Icons.Edit />
-                  </button>
-                  <button title="Submit" onClick={(e) => {e.stopPropagation(); submitForApproval(t.id);}}>
-                    <Icons.Send />
-                  </button>
-                  <button title="Delete" className="danger" onClick={(e) => {e.stopPropagation(); deleteTemplate(t.id);}}>
-                    <Icons.Trash />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+  {templates.length === 0 && (
+    <div className="wa-empty-state">No templates found.</div>
+  )}
+
+  {templates.map((t) => (
+  <div
+    key={t.id}
+    id={`template-${t.id}`}
+    className={`wa-draft-item ${form.id === t.id ? "active" : ""}`}
+    onClick={() => startEdit(t)}
+  >
+    {/* ===== Template Meta (Professional Sidebar UI) ===== */}
+    <div className="wa-draft-meta">
+      <div className="wa-draft-title">
+        {t.template_name || "Untitled Template"}
+      </div>
+
+      <div className="wa-draft-sub" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+  <span className="wa-draft-status-text" style={{ textTransform: 'uppercase' }}>
+    <strong>{t.status}</strong>
+  </span>
+</div>
+    </div>
+
+    {/* ===== WhatsApp Bubble (UNCHANGED UI) ===== */}
+    <div className={`wa-chat-bubble ${form.id === t.id ? "active" : ""}`}>
+      {/* Header preview */}
+      {t.header_type === "text" && t.header_text && (
+        <div className="wa-draft-header-preview">
+          {t.header_text}
+        </div>
+        
+      )}
+
+      {t.header_type !== "text" && t.header_media_url && (
+        <div className="wa-draft-media-preview">
+          {t.header_type.toUpperCase()} attached
+        </div>
+      )}
+      
+
+      {/* Body */}
+      <div className="wa-chat-body">
+        {(t.message_body ?? "").substring(0, 120)}
+        {(t.message_body ?? "").length > 120 ? "…" : ""}
+      </div>
+
+      {/* Footer */}
+      <div className="wa-chat-footer">
+        <div className="wa-chat-meta">
+          <span
+            className="wa-status-dot"
+            style={{ background: getStatusColor() }}
+          />
+          
+        </div>
+
+        <div className="wa-chat-actions">
+          <button
+            title="Edit"
+            onClick={(e) => {
+              e.stopPropagation();
+              startEdit(t);
+            }}
+          >
+            <Icons.Edit />
+          </button>
+
+          <button
+            title="Submit"
+            onClick={(e) => {
+              e.stopPropagation();
+              submitForApproval(t.id);
+            }}
+          >
+            <Icons.Send />
+          </button>
+
+          <button
+            title="Delete"
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteTemplate(t.id);
+            }}
+          >
+            <Icons.Trash />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+))}
+</div>
         </aside>
 
         {/* Right Content: Editor */}
@@ -286,8 +372,7 @@ export default function TemplatesPage() {
                   <h2>{form.id ? 'Edit Template' : 'New Template'}</h2>
                   <div className="wa-actions-group">
                     <button type="button" className="wa-btn wa-btn-ghost" onClick={() => { setForm(emptyTemplate); setEditing(false); }}>Cancel</button>
-                    <button type="submit" className="wa-btn wa-btn-primary">Save & Submit</button>
-                  </div>
+                    <button type="submit" className="wa-btn wa-btn-primary">{form.id ? "Update Template" : "Create Template"}</button>                  </div>
                 </div>
 
                 <div className="wa-form-content">
@@ -295,8 +380,8 @@ export default function TemplatesPage() {
                     <label>Template Name</label>
                     <input 
                       type="text" 
-                      value={form.name ?? ''} 
-                      onChange={e => updateField('name', e.target.value)} 
+                      value={form.template_name} 
+                      onChange={e => updateField('template_name', e.target.value)} 
                       placeholder="e.g. welcome_message_v1" 
                     />
                     <small>Only lowercase alphanumeric and underscores.</small>
@@ -336,16 +421,16 @@ export default function TemplatesPage() {
                   <div className="wa-field-group">
                     <label>Header (Optional)</label>
                     <div className="wa-input-with-select">
-                      <select className="prefix-select" value={form.headerType ?? 'Text'} onChange={e => updateField('headerType', e.target.value)}>
+                      <select className="prefix-select" value={form.header_type ?? 'Text'} onChange={e => updateField('header_type', e.target.value)}>
                         <option>Text</option>
                         <option>Image</option>
                         <option>Video</option>
                         <option>Document</option>
                       </select>
-                      {form.headerType === 'Text' ? (
+                      {form.header_type === 'Text' ? (
                         <input 
-                          value={form.headerText ?? ''} 
-                          onChange={e => updateField('headerText', e.target.value)} 
+                          value={form.header_text ?? ''} 
+                          onChange={e => updateField('header_text', e.target.value)} 
                           placeholder="Header text..." 
                         />
                       ) : (
@@ -354,7 +439,7 @@ export default function TemplatesPage() {
                              <Icons.Upload /> {uploading ? 'Uploading...' : 'Choose File'}
                            </button>
                            <input ref={fileRef} type="file" onChange={handleUpload} style={{display:'none'}} />
-                           {form.headerMediaUrl && <span className="file-status">File uploaded</span>}
+                           {form.header_media_url && <span className="file-status">File uploaded</span>}
                         </div>
                       )}
                     </div>
@@ -367,8 +452,8 @@ export default function TemplatesPage() {
                     </div>
                     <div className="wa-textarea-wrapper">
                         <textarea
-                        value={form.body ?? ''}
-                        onChange={e => updateField('body', e.target.value)}
+                        value={form.message_body ?? ''}
+                        onChange={e => updateField('message_body', e.target.value)}
                         placeholder="Hi {{1}}, your order {{2}} is ready..."
                         />
                         <div className="wa-toolbar">
@@ -389,15 +474,32 @@ export default function TemplatesPage() {
                       {(form.buttons || []).map((b, i) => (
                         <div className="wa-button-row" key={i}>
                           <div className="wa-button-inputs">
-                            <select value={b.type ?? 'url'} onChange={e => updateButton(i, 'type', e.target.value)}>
-                                <option value="url">Visit Website</option>
-                                <option value="call">Call Number</option>
-                                <option value="quick_reply">Quick Reply</option>
-                                <option value="copy">Copy Code</option>
-                            </select>
-                            <input placeholder="Label" value={b.text ?? ''} onChange={e => updateButton(i, 'text', e.target.value)} />
-                            <input placeholder={b.type === 'url' ? 'https://...' : 'Action payload/number'} value={b.payload ?? ''} onChange={e => updateButton(i, 'payload', e.target.value)} />
-                          </div>
+  <select
+    value={b.button_type}
+    onChange={e => updateButton(i, 'button_type', e.target.value)}
+  >
+    <option value="url">Visit Website</option>
+    <option value="call">Call Number</option>
+    <option value="quick_reply">Quick Reply</option>
+    <option value="copy">Copy Code</option>
+  </select>
+
+  <input
+    placeholder="Label"
+    value={b.button_text || ''}
+    onChange={e => updateButton(i, 'button_text', e.target.value)}
+  />
+
+  <input
+    placeholder={
+      b.button_type === 'url'
+        ? 'https://example.com'
+        : 'Action value / phone number'
+    }
+    value={b.button_value || ''}
+    onChange={e => updateButton(i, 'button_value', e.target.value)}
+  />
+</div>
                           <button type="button" className="wa-icon-btn danger" onClick={() => removeButton(i)}>
                             <Icons.Trash />
                           </button>
@@ -423,16 +525,16 @@ export default function TemplatesPage() {
                             <div className="wa-message-body">
                             
                             {/* Header */}
-                            {form.headerType === 'Text' && form.headerText && (
-                                <div className="msg-header-text">{form.headerText}</div>
+                            {form.header_type === 'Text' && form.header_text && (
+                                <div className="msg-header-text">{form.header_text}</div>
                             )}
-                            {form.headerType !== 'Text' && (
+                            {form.header_type !== 'Text' && (
                                 <div className="msg-header-media">
-                                {form.headerMediaUrl ? (
-                                    form.headerType === 'Image' ? (
-                                    <img src={form.headerMediaUrl} alt="Header" style={{width:'100%', display:'block'}} />
+                                {form.header_media_url ? (
+                                    form.header_type === 'Image' ? (
+                                    <img src={form.header_media_url} alt="Header" style={{width:'100%', display:'block'}} />
                                     ) : (
-                                    <div className="media-placeholder filled">{form.headerType} Attached</div>
+                                    <div className="media-placeholder filled">{form.header_type} Attached</div>
                                     )
                                 ) : (
                                     <div className="media-placeholder">No Media</div>
@@ -442,7 +544,7 @@ export default function TemplatesPage() {
 
                             {/* Body Text */}
                             <div className="msg-content">
-                                {(form.body || 'Your message text will appear here...').split(/(\{\{\d+\}\})/g).map((part, i) =>
+                                {(form.message_body || 'Your message text will appear here...').split(/(\{\{\d+\}\})/g).map((part, i) =>
                                 part.match(/\{\{\d+\}\}/) ? <span className="msg-var" key={i}>{part}</span> : <span key={i}>{part}</span>
                                 )}
                             </div>
@@ -458,13 +560,14 @@ export default function TemplatesPage() {
                             {(form.buttons || []).length > 0 && (
                             <div className="wa-message-actions">
                                 {(form.buttons || []).map((b, i) => (
-                                <div key={i} className="msg-action-btn">
-                                    {b.type === 'url' && <span className="btn-icon">↗</span>}
-                                    {b.type === 'call' && <span className="btn-icon">📞</span>}
-                                    {b.type === 'copy' && <span className="btn-icon">📋</span>}
-                                    {b.text || 'Button'}
-                                </div>
-                                ))}
+  <div key={i} className="msg-action-btn">
+    {b.button_type === 'url' && <span className="btn-icon">↗</span>}
+    {b.button_type === 'call' && <span className="btn-icon">📞</span>}
+    {b.button_type === 'copy' && <span className="btn-icon">📋</span>}
+    {b.button_type === 'quick_reply' && <span className="btn-icon">💬</span>}
+    {b.button_text || 'Button'}
+  </div>
+))}
                             </div>
                             )}
                         </div>
@@ -556,19 +659,21 @@ export default function TemplatesPage() {
 
         /* Layout Grid */
         .wa-layout {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            height: calc(100vh - 74px);
-            overflow: hidden;
-        }
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: calc(100vh - 74px);
+  overflow: hidden;
+}
 
         /* Sidebar */
         .wa-sidebar {
-            background: var(--wa-white);
-            border-right: 1px solid var(--wa-border);
-            display: flex;
-            flex-direction: column;
-        }
+  background: var(--wa-white);
+  border-right: 1px solid var(--wa-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;   /* 🔥 THIS IS THE FIX */
+  overflow: hidden;
+}
         .wa-search-box {
             padding: 16px;
             border-bottom: 1px solid var(--wa-border);
@@ -581,7 +686,7 @@ export default function TemplatesPage() {
             border-radius: 6px; border: 1px solid var(--wa-border); background: var(--wa-bg);
             outline: none;
         }
-        .wa-list-container { flex: 1; overflow-y: auto; }
+        
         .wa-list-item {
             padding: 16px; border-bottom: 1px solid var(--wa-border); cursor: pointer; transition: background 0.1s;
         }
@@ -768,6 +873,157 @@ export default function TemplatesPage() {
             .wa-preview-panel { padding-top: 0; }
             .wa-sticky-preview { position: static; }
         }
+            /* WhatsApp draft list background */
+.wa-list-container {
+  flex: 1;                   /* fills left column */
+  background: #efeae2;
+  padding: 12px;
+  overflow-y: auto;        /* FORCE scrollbar */
+  overflow-x: hidden;
+}
+
+/* Chat bubble */
+.wa-chat-bubble {
+  background: #dcf8c6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  max-width: 92%;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  cursor: pointer;
+  position: relative;
+}
+
+.wa-chat-bubble.active {
+  outline: 2px solid var(--wa-primary);
+}
+
+/* Header */
+.wa-chat-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #075e54;
+}
+
+.wa-chat-label {
+  font-weight: 500;
+  color: #667781;
+}
+
+/* Body */
+.wa-chat-body {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #111b21;
+  white-space: pre-wrap;
+}
+
+.wa-draft-header-preview {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111b21;
+  margin-bottom: 4px;
+}
+
+.wa-draft-media-preview {
+  font-size: 12px;
+  color: #075e54;
+  background: rgba(0, 128, 105, 0.1);
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  width: fit-content;
+}
+
+/* Footer */
+.wa-chat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #667781;
+}
+
+.wa-chat-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wa-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Actions */
+.wa-chat-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.wa-chat-actions button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #54656f;
+}
+
+.wa-chat-actions button:hover {
+  color: var(--wa-primary);
+}
+  .wa-draft-item {
+  background: #fcf8f8;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #e9edef;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wa-draft-item:hover {
+  background: #f7f9fa;
+}
+
+.wa-draft-item.active {
+  box-shadow: 0 0 0 2px var(--wa-primary);
+}
+  .wa-draft-meta {
+  padding: 4px 6px 8px;
+}
+
+.wa-draft-title {
+  font-size: 23px;
+  font-weight: 600;
+  color: #111b21;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-draft-sub {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #667781;
+}
+
+.wa-draft-lang {
+  font-weight: 500;
+}
+
+.wa-draft-status-text {
+  text-transform: capitalize;
+}
+  .wa-draft-item .wa-chat-bubble {
+  margin: 0;
+}
       `}</style>
     </div>
   );

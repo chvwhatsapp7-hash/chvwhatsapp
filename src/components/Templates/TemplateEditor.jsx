@@ -61,20 +61,57 @@ function TemplateEditor({ initial = null, onCancel = ()=>{}, onSaved = ()=>{} })
     for(const b of (t.buttons||[])){ if(!b.text) return 'Each button needs text.' }
     return null;
   }
+async function handleSave(e) {
+  e.preventDefault();
 
-  async function handleSave(e){
-    e && e.preventDefault();
-    const err = validateTemplate(form);
-    if(err){ window.alert(err); return; }
-    try{
-      const method = form.id ? 'PUT' : 'POST';
-      const endpoint = form.id ? `/api/templates?id=${form.id}` : '/api/templates';
-      const res = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-      const js = await res.json();
-      window.alert(js.message || 'Saved');
-      onSaved(js.template || null);
-    }catch(err){ console.error(err); window.alert('Save failed'); }
+  const payload = {
+    template_id: form.id || null,
+    template_name: form.name,
+    category: form.category,
+    language: form.language,
+    template_type: form.templateType,
+
+    header_type: form.headerType,
+    header_text: form.headerType === "Text" ? form.headerText : null,
+    header_media_url: form.headerType !== "Text" ? form.headerMediaUrl : null,
+
+    message_body: form.body,
+    footer_text: form.footer || null,
+
+    variable_count: form.placeholders.length,
+
+    // 🔥 IMPORTANT FIX: JSON OBJECT (not array)
+    variables: form.placeholders.reduce((acc, p, i) => {
+      acc[i + 1] = p.replace(/[{}]/g, "");
+      return acc;
+    }, {}),
+
+    buttons: form.buttons.map((b, i) => ({
+      button_type: b.type,
+      button_text: b.text,
+      button_value: b.payload || null,
+      position: i + 1
+    }))
+  };
+
+  console.log("FRONTEND PAYLOAD:", payload);
+
+  const res = await fetch("/api/templates/template", {
+    method: form.id ? "PUT" : "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    alert(data.error || "Save failed");
+    return;
   }
+
+  onSaved(data);
+}
+
+}
 
   return (
     <form className="editor" onSubmit={handleSave}>
