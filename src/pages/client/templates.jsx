@@ -255,7 +255,8 @@ async function saveTemplate(e) {
     key={t.id}
     id={`template-${t.id}`}
     className={`wa-draft-item ${form.id === t.id ? "active" : ""}`}
-    onClick={() => setForm(prev => ({ ...prev, id: t.id }))}
+    onClick={() => startEdit(t)}
+
   >
     {/* ===== Template Meta (Professional Sidebar UI) ===== */}
     <div className="wa-draft-meta">
@@ -511,14 +512,28 @@ async function saveTemplate(e) {
                             {form.header_type !== 'text' && (
                                 <div className="msg-header-media">
                                 {form.header_media_url ? (
-                                    form.header_type === 'image' ? (
-                                    <img src={form.header_media_url} alt="Header" style={{width:'100%', display:'block'}} />
-                                    ) : (
-                                    <div className="media-placeholder filled">{form.header_type} Attached</div>
-                                    )
-                                ) : (
-                                    <div className="media-placeholder">No Media</div>
-                                )}
+  form.header_type === 'image' ? (
+    <img
+      src={form.header_media_url}
+      alt="Header"
+      style={{ width: '100%', display: 'block' }}
+    />
+  ) : form.header_type === 'video' ? (
+    <video
+      src={form.header_media_url}
+      controls
+      style={{ width: '100%', display: 'block' }}
+    />
+  ) : form.header_type === 'document' ? (
+    <div className="doc-preview">
+      📄 <strong>Document Attached</strong>
+    </div>
+  ) : null
+) : (
+  <div className="media-placeholder">No Media</div>
+)}
+
+
                                 </div>
                             )}
 
@@ -1047,6 +1062,17 @@ async function saveTemplate(e) {
 .wa-header-file-box:hover {
   background: #f8fafc;
   border-color: #94a3b8;
+}
+.doc-preview {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f9f9f9;
+  font-size: 14px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
   
