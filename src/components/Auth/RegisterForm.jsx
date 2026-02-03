@@ -1,4 +1,14 @@
 import React, { useState } from "react";
+import {
+  FaUser,
+  FaEnvelope,
+  FaWhatsapp,
+  FaLock,
+  FaBuilding,
+  FaFlag,
+  FaGlobe,
+  FaFileInvoice
+} from "react-icons/fa";
 
 function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -20,200 +30,162 @@ function RegisterForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
-  const mapToBackendPayload = (fd) => {
-
-    return {
-      first_name: fd.firstName,
-      last_name: fd.lastName,
-      email: fd.email,
-      password: fd.password,
-      whatsapp_number: fd.personalWhatsappNumber,
-      business_name: fd.businessName,
-      country: fd.businessCountry,
-      website: fd.businessWebsiteUrl,
-      gst_num: fd.GST,
-
-    };
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.password ||
-      !formData.businessName ||
-      !formData.businessCountry ||
-      !formData.businessWebsiteUrl ||
-      !formData.GST
-    ) {
-      setError("Please fill all the required fields.");
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const payload = mapToBackendPayload(formData);
-
-      const url = "/api/register";
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      let data = null;
-      try {
-        data = await response.json();
-      } catch (parseErr) {
-      }
-
-      if (response.status === 201 || response.ok) {
-        setSuccess(
-          (data && data.message) ||
-            "Registration successful! Please check your email for verification."
-        );
-        // clear form
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          personalWhatsappNumber: "",
-          password: "",
-          businessName: "",
-          businessCountry: "",
-          businessWebsiteUrl: "",
-          GST: "",
-        });
-      } else if (response.status === 409) {
-        setError((data && data.message) || "User already exists.");
-      } else if (response.status >= 400 && response.status < 500) {
-        setError((data && data.message) || "Invalid data provided.");
-      } else {
-        setError((data && data.message) || "Server error. Try again later.");
-      }
-    } catch (err) {
-      console.error("Registration error:", err);
-      setError("Network error. Check your connection or backend URL.");
-    } finally {
-      setLoading(false);
-    }
   };
 
+  /* ===== Styles ===== */
   const formSectionStyle = { marginBottom: "30px", borderBottom: "1px solid #eee", paddingBottom: "20px" };
   const inputGroupStyle = { marginBottom: "15px", display: "flex", gap: "20px" };
   const inputWrapperStyle = { flex: "1", display: "flex", flexDirection: "column" };
-  const labelStyle = { display: "block", marginBottom: "5px", fontWeight: "500", fontSize: "0.9em", color: "#555" };
-  const inputStyle = { width: "100%", padding: "10px 12px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box", fontSize: "1em" };
-  const passwordInputWrapperStyle = { ...inputWrapperStyle, position: "relative" };
-  const eyeIconStyle = { position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#888" };
-  const buttonStyle = { width: "100%", padding: "15px", backgroundColor: "#00c6a7", color: "white", border: "none", borderRadius: "5px", fontSize: "1.1em", cursor: loading ? "not-allowed" : "pointer", marginTop: "20px", fontWeight: "bold" };
-  const linkStyle = { color: "#00c6a7", textDecoration: "none" };
+  const labelStyle = { marginBottom: "5px", fontWeight: "500", fontSize: "0.9em", color: "#555" };
+  const inputStyle = { padding: "10px 12px", border: "none", outline: "none", width: "100%" };
+
+  const inputWithIconStyle = {
+    display: "flex",
+    alignItems: "center",
+    border: "1px solid #ddd",
+    borderRadius: "4px",
+    padding: "0 10px",
+    background: "#fff"
+  };
+
+  const iconStyle = { marginRight: "8px", color: "#888", fontSize: "0.9em" };
+
+  const buttonStyle = {
+    width: "100%",
+    padding: "15px",
+    backgroundColor: "#00c6a7",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    fontSize: "1.1em",
+    fontWeight: "bold",
+    cursor: "pointer",
+    marginTop: "20px"
+  };
 
   return (
-    <div style={{ maxWidth: "600px", margin: "50px auto", padding: "30px", background: "white", borderRadius: "8px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "10px", color: "#333" }}>Create your free account</h2>
-      <p style={{ textAlign: "center", marginBottom: "30px", color: "#666", fontSize: "0.9em" }}>Enter details below to create your Whatsapp Notifier account.</p>
-
-      {error && <p style={{ color: "red", textAlign: "center", marginBottom: "15px" }}>{error}</p>}
-      {success && <p style={{ color: "green", textAlign: "center", marginBottom: "15px" }}>{success}</p>}
+    <div style={{ maxWidth: "600px", margin: "50px auto", padding: "30px", background: "#fff", borderRadius: "8px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}>
+      <h2 style={{ textAlign: "center" }}>Create your free account</h2>
 
       <form onSubmit={handleSubmit}>
+        {/* Personal Details */}
         <div style={formSectionStyle}>
-          <h3 style={{ marginBottom: "20px", color: "#333" }}>Personal details</h3>
-          <div style={inputGroupStyle}>
-            <div style={inputWrapperStyle}>
-              <label htmlFor="firstName" style={labelStyle}>First Name</label>
-              <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter your First name" required style={inputStyle} />
-            </div>
-            <div style={inputWrapperStyle}>
-              <label htmlFor="lastName" style={labelStyle}>Last Name</label>
-              <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter your last name" required style={inputStyle} />
-            </div>
-          </div>
+          <h3>Personal details</h3>
 
           <div style={inputGroupStyle}>
             <div style={inputWrapperStyle}>
-              <label htmlFor="email" style={labelStyle}>Email</label>
-              <input type="text" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter your email" required style={inputStyle} />
+              <label style={labelStyle}>First Name</label>
+              <div style={inputWithIconStyle}>
+                <FaUser style={iconStyle} />
+                <input name="firstName" value={formData.firstName} onChange={handleChange} style={inputStyle} />
+              </div>
             </div>
-            <div style={inputWrapperStyle}>
-              <label htmlFor="personalWhatsappNumber" style={labelStyle}>Whatsapp Number</label>
-              <input type="text" id="personalWhatsappNumber" name="personalWhatsappNumber" value={formData.personalWhatsappNumber} onChange={handleChange} placeholder="Enter your Whatsapp Number" required style={inputStyle} />
-            </div>
-          </div>
 
-          <div style={inputGroupStyle}>
-            <div style={passwordInputWrapperStyle}>
-              <label htmlFor="password" style={labelStyle}>PASSWORD</label>
-              <input type={showPassword ? "text" : "password"} id="password" name="password" value={formData.password} onChange={handleChange} placeholder="********" required style={inputStyle} />
-              <span onClick={togglePasswordVisibility} style={eyeIconStyle}>{showPassword ? "👁️" : "🔒"}</span>
-            </div>
-          </div>
-        </div>
-
-        <div style={formSectionStyle}>
-          <h3 style={{ marginBottom: "20px", color: "#333" }}>Business details</h3>
-          <p style={{ marginBottom: "20px", color: "#666", fontSize: "0.9em" }}>
-            Legal business entity with a live website is required to access WhatsApp API
-          </p>
-          <div style={inputGroupStyle}>
             <div style={inputWrapperStyle}>
-              <label htmlFor="businessName" style={labelStyle}>BUSINESS NAME</label>
-              <input type="text" id="businessName" name="businessName" value={formData.businessName} onChange={handleChange} placeholder="Enter business name" required style={inputStyle} />
-            </div>
-            <div style={inputWrapperStyle}>
-              <label htmlFor="businessCountry" style={labelStyle}>BUSINESS COUNTRY</label>
-              <select id="businessCountry" name="businessCountry" value={formData.businessCountry} onChange={handleChange} required style={inputStyle}>
-                <option value="">Select your country</option>
-                <option value="India">India</option>
-                <option value="USA">USA</option>
-                <option value="UK">UK</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={inputGroupStyle}>
-            <div style={inputWrapperStyle}>
-              <label htmlFor="businessWebsiteUrl" style={labelStyle}>BUSINESS WEBSITE URL (MUST BE LIVE)</label>
-              <input type="url" id="businessWebsiteUrl" name="businessWebsiteUrl" value={formData.businessWebsiteUrl} onChange={handleChange} placeholder="https://..." required style={inputStyle} />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: "30px" }}>
-            <h3 style={{ marginBottom: "20px", color: "#333" }}>Other details</h3>
-            <div style={inputGroupStyle}>
-              <div style={inputWrapperStyle}>
-                <label htmlFor="GST" style={labelStyle}>GST Number</label>
-                <input id="GST" name="GST" value={formData.GST} onChange={handleChange} style={inputStyle} />
+              <label style={labelStyle}>Last Name</label>
+              <div style={inputWithIconStyle}>
+                <FaUser style={iconStyle} />
+                <input name="lastName" value={formData.lastName} onChange={handleChange} style={inputStyle} />
               </div>
             </div>
           </div>
 
-          <p style={{ textAlign: "center", fontSize: "0.85em", color: "#666", marginBottom: "25px" }}>
-            By creating your account, you agree to our <a href="#" style={linkStyle}>Terms and Conditions</a>, <a href="#" style={linkStyle}>Privacy Policy</a> and <a href="#" style={linkStyle}>Refund Policy</a>.
-          </p>
+          <div style={inputGroupStyle}>
+            <div style={inputWrapperStyle}>
+              <label style={labelStyle}>Email</label>
+              <div style={inputWithIconStyle}>
+                <FaEnvelope style={iconStyle} />
+                <input name="email" value={formData.email} onChange={handleChange} style={inputStyle} />
+              </div>
+            </div>
 
-          <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Creating account..." : "Create account"}</button>
+            <div style={inputWrapperStyle}>
+              <label style={labelStyle}>Whatsapp Number</label>
+              <div style={inputWithIconStyle}>
+                <FaWhatsapp style={iconStyle} />
+                <input name="personalWhatsappNumber" value={formData.personalWhatsappNumber} onChange={handleChange} style={inputStyle} />
+              </div>
+            </div>
+          </div>
 
+          <div style={inputWrapperStyle}>
+            <label style={labelStyle}>Password</label>
+            <div style={inputWithIconStyle}>
+              <FaLock style={iconStyle} />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                style={inputStyle}
+              />
+              <span onClick={togglePasswordVisibility} style={{ cursor: "pointer" }}>
+                {showPassword ? "👁️" : "🔒"}
+              </span>
+            </div>
+          </div>
         </div>
+
+        {/* Business Details */}
+        <div style={formSectionStyle}>
+          <h3>Business details</h3>
+
+          <div style={inputGroupStyle}>
+            <div style={inputWrapperStyle}>
+              <label style={labelStyle}>Business Name</label>
+              <div style={inputWithIconStyle}>
+                <FaBuilding style={iconStyle} />
+                <input name="businessName" value={formData.businessName} onChange={handleChange} style={inputStyle} />
+              </div>
+            </div>
+
+            <div style={inputWrapperStyle}>
+              <label style={labelStyle}>Business Country</label>
+              <div style={inputWithIconStyle}>
+                <FaFlag style={iconStyle} />
+                <select
+                  name="businessCountry"
+                  value={formData.businessCountry}
+                  onChange={handleChange}
+                  style={{ ...inputStyle, appearance: "none" }}
+                >
+                  <option value="">Select</option>
+                  <option value="India">India</option>
+                  <option value="USA">USA</option>
+                  <option value="UK">UK</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style={inputWrapperStyle}>
+            <label style={labelStyle}>Business Website</label>
+            <div style={inputWithIconStyle}>
+              <FaGlobe style={iconStyle} />
+              <input name="businessWebsiteUrl" value={formData.businessWebsiteUrl} onChange={handleChange} style={inputStyle} />
+            </div>
+          </div>
+        </div>
+
+        {/* GST */}
+        <div style={inputWrapperStyle}>
+          <label style={labelStyle}>GST Number</label>
+          <div style={inputWithIconStyle}>
+            <FaFileInvoice style={iconStyle} />
+            <input name="GST" value={formData.GST} onChange={handleChange} style={inputStyle} />
+          </div>
+        </div>
+
+        <button type="submit" style={buttonStyle}>Create account</button>
       </form>
     </div>
   );
