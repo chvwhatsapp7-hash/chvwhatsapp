@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom'; // <-- REMOVED BrowserRouter as Router
+import {Routes, Route, Navigate } from 'react-router-dom'; // <-- REMOVED BrowserRouter as Router
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Page Imports
@@ -8,6 +8,10 @@ import RegisterPage from './pages/auth/register';
 import LoginPage from './pages/auth/login';
 import AdminHomePage from './pages/admin/index';
 import ClientHomePage from './pages/client/index';
+import AddClient from './pages/admin/AddClient';
+import AllUsers from "./pages/admin/allusers";
+import AdminLayout from './components/Layout/AdminLayout';
+
 
 import Campaigns from './pages/client/campaigns'
 import Templates from './pages/client/templates'
@@ -33,6 +37,7 @@ const PrivateRoute = ({ children, role }) => {
 function App() {
   return (
     <AuthProvider>
+      
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -50,6 +55,23 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+  path="/admin/add-client"
+  element={
+    <PrivateRoute role="admin">
+      <AddClient />
+    </PrivateRoute>
+  }
+/>
+<Route
+  path="/admin/allusers"
+  element={
+    <AdminLayout pageTitle="All Users">
+      <AllUsers />
+    </AdminLayout>
+  }
+/>
+
 
         {/* Client Routes */}
         <Route
@@ -109,6 +131,7 @@ function App() {
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+     
     </AuthProvider>
 
       

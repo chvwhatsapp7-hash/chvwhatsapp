@@ -2,7 +2,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 // set backend origin here.
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:3000';
+const API_BASE =
+  process.env.REACT_APP_API_BASE ||
+  process.env.NEXT_PUBLIC_API_BASE ||
+  "http://localhost:3000";
 
 // Simple Icons for UI polish
 const Icons = {
@@ -37,6 +40,9 @@ export default function TemplatesPage() {
   const [uploading, setUploading] = useState(false);
   const [charCount, setCharCount] = useState(0);
   const fileRef = useRef(null);
+
+  const [previewUrl, setPreviewUrl] = useState(""); // temporary preview only
+
 
   // Fetch templates on load
   useEffect(() => {
@@ -101,30 +107,51 @@ export default function TemplatesPage() {
   }
 
   async function handleUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    const localUrl = URL.createObjectURL(file);
-    const type = file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : "document";
+  // Revoke previous local preview
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
 
-    updateField("header_media_url", localUrl);
-    updateField("header_type", type);
+  const localUrl = URL.createObjectURL(file);
+  setPreviewUrl(localUrl);
 
-    setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
+  const type = file.type.startsWith("image/")
+    ? "image"
+    : file.type.startsWith("video/")
+    ? "video"
+    : "document";
 
-    try {
-      const res = await fetch(`${API_BASE}/api/upload`, { method: "POST", body: fd, credentials: "include" });
-      if (!res.ok) throw new Error("Upload failed");
-      const js = await res.json();
-      updateField("header_media_url", js.url);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setUploading(false);
-    }
+  updateField("header_type", type);
+
+  setUploading(true);
+  const fd = new FormData();
+  fd.append("file", file);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/templates/upload`, {
+      method: "POST",
+      body: fd,
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error("Upload failed");
+
+    const js = await res.json();
+    // Set permanent backend URL
+    updateField("header_media_url", js.url);
+
+    // Clear temporary preview
+    setPreviewUrl("");
+  } catch (err) {
+    console.error(err);
+    window.alert("Upload failed");
+  } finally {
+    setUploading(false);
   }
+}
+
+
 
   function validateTemplate(t) {
     if (!t.template_name) return "Template name required";
@@ -190,17 +217,24 @@ async function saveTemplate(e) {
   }
 }
   function startEdit(t) {
+  // 🔥 CLEAR local preview (THIS WAS THE BUG)
+  setPreviewUrl("");
+
   setForm({
     ...emptyTemplate,
     ...t,
-    id: t.id, // for frontend logic
-    template_id: t.id, // required by backend
+    id: t.id,
+    template_id: t.id,
+    header_type: t.header_type || "text",
+    header_media_url: t.header_media_url || "",
     buttons: t.buttons || [],
     variables: t.variables || {},
     variable_count: t.variable_count || 0,
   });
+
   setEditing(true);
 }
+
   async function deleteTemplate(id) {
   if (!window.confirm('Delete template?')) return;
   try {
@@ -278,10 +312,51 @@ async function saveTemplate(e) {
       )}
 
       {t.header_type !== "text" && t.header_media_url && (
-        <div className="wa-draft-media-preview">
-          {t.header_type.toUpperCase()} attached
-        </div>
-      )}
+  <div className="wa-draft-media-preview">
+    {t.header_type === "image" && (
+  <div className="wa-thumb-wrapper">
+    <img
+      src={t.header_media_url}
+      alt="media"
+      className="wa-draft-thumb"
+    />
+    
+  </div>
+)}
+
+
+    {t.header_type === "video" && (
+  <video
+    src={t.header_media_url}
+    className="wa-draft-thumb"
+    muted
+    preload="metadata"
+  />
+)}
+
+
+    {t.header_type === "document" && (
+  <div className="wa-thumb-wrapper">
+    <div className="wa-draft-thumb document">
+      📄 {t.header_media_url.split("/").pop()}
+    </div>
+
+    {/* Preview */}
+    <div className="wa-thumb-hover doc-preview">
+      <div className="doc-preview-content">
+        <span className="doc-icon">📄</span>
+        <span className="doc-name">
+          {t.header_media_url.split("/").pop()}
+        </span>
+      </div>
+    </div>
+  </div>
+)}
+
+
+  </div>
+)}
+
       
 
       {/* Body */}
@@ -509,33 +584,25 @@ async function saveTemplate(e) {
                             {form.header_type === 'text' && form.header_text && (
                                 <div className="msg-header-text">{form.header_text}</div>
                             )}
+                            
                             {form.header_type !== 'text' && (
-                                <div className="msg-header-media">
-                                {form.header_media_url ? (
-  form.header_type === 'image' ? (
-    <img
-      src={form.header_media_url}
-      alt="Header"
-      style={{ width: '100%', display: 'block' }}
-    />
-  ) : form.header_type === 'video' ? (
-    <video
-      src={form.header_media_url}
-      controls
-      style={{ width: '100%', display: 'block' }}
-    />
-  ) : form.header_type === 'document' ? (
-    <div className="doc-preview">
-      📄 <strong>Document Attached</strong>
-    </div>
-  ) : null
-) : (
-  <div className="media-placeholder">No Media</div>
+  <div className="msg-header-media">
+    {(previewUrl || form.header_media_url) ? (
+      form.header_type === 'image' ? (
+        <img src={previewUrl || form.header_media_url} alt="Header" style={{ width: '100%', display: 'block' }} />
+      ) : form.header_type === 'video' ? (
+        <video src={previewUrl || form.header_media_url} controls style={{ width: '100%', display: 'block' }} />
+      ) : form.header_type === 'document' ? (
+        <div className="doc-preview">
+          📄 <strong>Document Attached</strong>
+        </div>
+      ) : null
+    ) : (
+      <div className="media-placeholder">No Media</div>
+    )}
+  </div>
 )}
 
-
-                                </div>
-                            )}
 
                             {/* Body Text */}
                             <div className="msg-content">
@@ -1075,7 +1142,76 @@ async function saveTemplate(e) {
   gap: 8px;
 }
 
-  
+  /* Thumbnail wrapper */
+.wa-thumb-wrapper {
+  position: relative;
+}
+
+/* Hover preview */
+.wa-thumb-hover {
+  position: absolute;
+  left: 110%;
+  top: 0;
+  z-index: 50;
+  display: none;
+  background: white;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.wa-thumb-hover img {
+  width: 220px;
+  border-radius: 8px;
+}
+
+/* Show on hover */
+.wa-thumb-wrapper:hover .wa-thumb-hover {
+  display: block;
+}
+
+/* Shared thumb */
+.wa-draft-thumb {
+  width: 100%;
+  max-height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e9edef;
+  margin-bottom: 6px;
+}
+
+/* Document badge */
+.wa-draft-thumb.document {
+  height: auto;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #075e54;
+  text-align: center;
+}
+/* Document preview */
+.doc-preview {
+  min-width: 220px;
+}
+
+.doc-preview-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #075e54;
+}
+
+.doc-icon {
+  font-size: 26px;
+}
+
+.doc-name {
+  word-break: break-all;
+}
+
       `}</style>
     </div>
   );

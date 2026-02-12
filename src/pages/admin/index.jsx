@@ -6,7 +6,6 @@ const AdminHomePage = () => {
   const adminStats = {
     totalClients: 150,
     activeClients: 120,
-    pendingApprovals: 5,
     totalMessages: '1.2M',
   };
 
@@ -28,10 +27,7 @@ const AdminHomePage = () => {
           <h3 style={cardTitleStyle}>Active Clients</h3>
           <span style={cardValueStyle}>{adminStats.activeClients}</span>
         </div>
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Pending Template Approvals</h3>
-          <span style={cardValueStyle}>{adminStats.pendingApprovals}</span>
-        </div>
+        
         <div style={cardStyle}>
           <h3 style={cardTitleStyle}>Total Messages Processed</h3>
           <span style={cardValueStyle}>{adminStats.totalMessages}</span>

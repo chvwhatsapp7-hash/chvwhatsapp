@@ -38,11 +38,11 @@ const AdminLayout = ({ children, pageTitle }) => {
   const { logout } = useAuth();
 
   const adminNavLinks = [
-    { name: 'Dashboard', path: '/admin', icon: '👑' },
-    { name: 'Client Management', path: '/admin/clients', icon: '🏢' },
-    { name: 'Templates Approval', path: '/admin/templates', icon: '✅' },
-    { name: 'Audit Trail', path: '/admin/audit-trail', icon: '📜' },
-  ];
+  { name: 'Dashboard', path: '/admin', icon: '👑' },
+  { name: 'Add Client', path: '/admin/add-client', icon: '🏢' },
+  { name: 'All Users', path: '/admin/allusers', icon: '👥' }   // ✅ Added
+];
+
 
   return (
     <div style={layoutStyles.layoutContainer}>

@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+
 const LoginForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    
+
     const { login } = useAuth();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +38,7 @@ const LoginForm = () => {
             headers: {
             'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+body: JSON.stringify({ email, password}),
         });
 
         const data = await response.json();
@@ -94,7 +97,15 @@ const LoginForm = () => {
                     required
                     style={inputStyle}
                 />
-                <button type="submit" style={buttonStyle}>Login</button>
+
+
+<button 
+    type="submit" 
+    style={buttonStyle}
+    disabled={isLoading}
+>
+    {isLoading ? "Logging in..." : "Login"}
+</button>
             </form>
             <p style={{ marginTop: '20px', fontSize: '0.9em' }}>
                 Don't have an account? <Link to="/register" style={linkStyle}>Register here</Link>

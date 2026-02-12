@@ -136,6 +136,22 @@ function Contacts() {
     }
   };
 
+  const handleExportCsv = () => {
+  const header = ["name", "phnnum"]; // two columns
+  const rows = [["", ""]]; // one empty row (optional, can be empty)
+  const csvContent =
+    "data:text/csv;charset=utf-8," +
+    [header, ...rows].map(e => e.join(",")).join("\n");
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "contacts.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
   return (
     <ClientLayout pageTitle="Contacts">
       <>
@@ -194,6 +210,33 @@ function Contacts() {
             </button>
           </form>
         </div>
+        <button
+            type="button"
+            onClick={handleExportCsv}
+            style={{
+            padding: "2px 6px",
+            fontSize: "0.75rem",
+            marginLeft: "8px",
+            backgroundColor: "#28a745",
+            color: "white",
+            border: "none",
+            borderRadius: "3px",
+            cursor: "pointer",
+           }}
+  > Export
+         </button>
+     <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setFile(e.target.files[0])}
+              required
+              style={inputStyle}
+            />
+            <button type="submit" disabled={loading} style={buttonStyle}>
+              {loading ? "Uploading..." : "Upload CSV"}
+            </button>
+         
+  
 
         {/* --- Contacts List Table --- */}
         <h2 style={{ marginTop: "2rem" }}>Your Contacts</h2>
