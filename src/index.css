@@ -72,17 +72,15 @@ input {
 
 /* Buttons – Premium CTA */
 button {
-  background: linear-gradient(135deg, #075E54, #25D366) !important;
   border-radius: 999px !important;
-  font-weight: 700;
+  font-weight: 550px;
+  color: #eef2f7;
   letter-spacing: 0.4px;
-  box-shadow: 0 10px 25px rgba(37, 211, 102, 0.35);
   transition: all 0.3s ease;
 }
 
 button:hover {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 16px 38px rgba(37, 211, 102, 0.45);
 }
 
 /* Section Titles */
@@ -194,17 +192,38 @@ ul li {
   background-color: #f9f9f9;
   transition: 0.2s;
 }
-.delete-btn {
-  background: #ff4d4f;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  color: white;
-  font-size: 13px;
-  cursor: pointer;
-  transition: 0.2s;
+.premium-ui button {
+  background: linear-gradient(135deg, #075E54, #25D366);
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  box-shadow: 0 10px 25px rgba(37, 211, 102, 0.35);
+  transition: all 0.3s ease;
+}
+/* GREEN BUTTON */
+.btn-green {
+  background: #25D366 !important;
+  border-color:#25D366 ;
+  border-style: solid;
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.35) !important;
 }
 
-.delete-btn:hover {
-  background: #d9363e;
+.btn-green:hover {
+  background: #1ebe5d !important;
+  box-shadow: 0 12px 28px rgba(37, 211, 102, 0.55) !important;
+  transform: translateY(-2px);
+}
+
+/* RED BUTTON */
+.btn-red {
+  background-color:red  !important;
+  border-color: red;
+  border-style: solid;
+  box-shadow: 0 8px 20px rgba(255, 77, 79, 0.35) !important;
+}
+
+.btn-red:hover {
+  background: #d9363e !important;
+  box-shadow: 0 12px 28px rgba(255, 77, 79, 0.55) !important;
+  transform: translateY(-2px);
 }

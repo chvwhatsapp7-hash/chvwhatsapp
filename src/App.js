@@ -16,7 +16,6 @@ import AdminLayout from './components/Layout/AdminLayout';
 import Campaigns from './pages/client/campaigns'
 import Templates from './pages/client/templates'
 import Contacts from './pages/client/contacts';
-import Reports from './pages/client/reports';
 import ClientProfile from './pages/client/profile'
 import ResetPasswordPage from './pages/auth/resetpassword';
 
@@ -110,14 +109,7 @@ function App() {
           }
         />
 
-        <Route
-          path="/client/reports"
-          element={
-            <PrivateRoute role="client">
-              <Reports />
-            </PrivateRoute>
-          }
-        />
+      
 
         <Route
           path="/client/profile"

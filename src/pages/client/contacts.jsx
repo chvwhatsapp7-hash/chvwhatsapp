@@ -225,7 +225,7 @@ function Contacts() {
             </button>
           </form>
         </div>
-        <button
+        {/* <button
             type="button"
             onClick={handleExportCsv}
             style={{
@@ -251,7 +251,7 @@ function Contacts() {
               {loading ? "Uploading..." : "Upload CSV"}
             </button>
          
-  
+   */}
 
         {/* --- Contacts List Table --- */}
         <h2 style={{ marginTop: "2rem" }}>Your Contacts</h2>

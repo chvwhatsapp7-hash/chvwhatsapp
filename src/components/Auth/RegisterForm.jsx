@@ -249,4 +249,4 @@ function RegisterForm({ isAdmin }) {
   );
 }
 
-export default RegisterPage;
+export default RegisterForm;

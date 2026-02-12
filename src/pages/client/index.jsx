@@ -75,7 +75,7 @@ export default function ClientHomePage() {
   const fetchMessages = async () => {
   try {
     const userId = 1;
-    const res = await fetch(`http://localhost:3000/api/messages?user_id=414`, {
+    const res = await fetch(`${API_BASE}/api/messages`, {
       method: "GET",
       credentials: "include",
     });

@@ -43,7 +43,6 @@ const ClientLayout = ({ children, pageTitle }) => {
     { name: 'Campaigns', path: '/client/campaigns', icon: '🚀' },
     { name: 'Templates', path: '/client/templates', icon: '📝' },
     { name: 'Contacts', path: '/client/contacts', icon: '👥' },
-    { name: 'Reports', path: '/client/reports', icon: '📈' },
     { name: 'Profile', path: '/client/profile', icon: '⚙️' },
   ];
 
