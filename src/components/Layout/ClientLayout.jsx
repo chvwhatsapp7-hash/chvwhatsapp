@@ -80,13 +80,16 @@ const ClientLayout = ({ children, pageTitle }) => {
           </button>
         </div>
       </aside>
-      <main style={layoutStyles.mainContent}>
-        <header style={layoutStyles.header}>
-          <h1 style={layoutStyles.headerTitle}>{pageTitle}</h1>
-        </header>
+     <main style={layoutStyles.mainContent}>
+  {pageTitle && (
+    <header style={layoutStyles.header}>
+      <h1 style={layoutStyles.headerTitle}>{pageTitle}</h1>
+    </header>
+  )}
 
-        {children}
-      </main>
+  {children}
+</main>
+
     </div>
   );
 };

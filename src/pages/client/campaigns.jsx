@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ClientLayout from "../../components/Layout/ClientLayout";
+import "./campaigns.css";
 
 function Campaigns() {
   const [contacts, setContacts] = useState([]);
@@ -7,172 +8,323 @@ function Campaigns() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔹 Templates
-  const [templates] = useState([
-    {
-      id: 1,
-      name: "Promotion",
-      message: "Hello {{name}}, check out our latest offers!",
-    },
-    {
-      id: 2,
-      name: "Reminder",
-      message: "Hi {{name}}, this is a reminder for your appointment.",
-    },
-    {
-      id: 3,
-      name: "Greetings",
-      message: "Hello {{name}}, thank you for being with us.",
-    },
-  ]);
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [campaignStatus, setCampaignStatus] = useState("idle"); // idle | running | paused | completed
+  const [currentContactIndex, setCurrentContactIndex] = useState(0);
 
-  const selectedTemplate = templates.find(
-    (t) => t.id === Number(selectedTemplateId)
-  );
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
 
+  const previewRef = useRef(null);
   const API_BASE = process.env.REACT_APP_API_URL || "";
 
-  // ---------------- FETCH CONTACTS ----------------
-  const fetchContacts = async () => {
-    setLoading(true);
-    setError("");
+  useEffect(() => {
+    fetchTemplates();
+    fetchContacts();
+  }, []);
 
+  useEffect(() => {
+    if (selectedTemplate && previewRef.current) {
+      previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedTemplate]);
+
+  // Iterate contacts while campaign is running
+  useEffect(() => {
+    let timer;
+    if (campaignStatus === "running" && selectedContacts.length > 0) {
+      if (currentContactIndex < selectedContacts.length) {
+        const contact = contacts.find(
+          (c) => c.contactid === selectedContacts[currentContactIndex]
+        );
+        const message = selectedTemplate?.message_body || "";
+
+        // Log message sending
+        console.log(
+          `Sending to ${contact.name} (${contact.phonenum}): ${message}`
+        );
+
+        timer = setTimeout(() => {
+          setCurrentContactIndex((prev) => prev + 1);
+        }, 1000); // 1 second per contact
+      } else {
+        console.log("Campaign completed");
+        setCampaignStatus("completed"); // Keep panel visible after completion
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [campaignStatus, currentContactIndex, selectedContacts, contacts, selectedTemplate]);
+
+  async function fetchTemplates() {
     try {
-      const res = await fetch(`${API_BASE}/api/Contact`, {
-        method: "GET",
+      const res = await fetch(`${API_BASE}/api/templates/template`, {
         credentials: "include",
       });
-
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to fetch contacts");
+      const templatesArray = Array.isArray(data?.data)
+        ? data.data.map((t) => ({ ...t, id: t.template_id }))
+        : [];
+      setTemplates(templatesArray);
+    } catch {
+      setTemplates([]);
+    }
+  }
 
+  async function fetchContacts() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/api/Contact`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
       setContacts(data.contacts || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  // ---------------- SELECT LOGIC ----------------
-  const toggleContact = (contactId) => {
+  const toggleContact = (id) => {
     setSelectedContacts((prev) =>
-      prev.includes(contactId)
-        ? prev.filter((id) => id !== contactId)
-        : [...prev, contactId]
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
   };
 
-  const selectAll = () => {
-    setSelectedContacts(contacts.map((c) => c.contactid));
+  const selectAll = () => setSelectedContacts(contacts.map((c) => c.contactid));
+  const clearAll = () => setSelectedContacts([]);
+
+  const toggleTemplate = (templateId) => {
+    setSelectedTemplateId((prev) => (prev === templateId ? null : templateId));
   };
 
-  const clearAll = () => {
-    setSelectedContacts([]);
+  // Campaign Actions
+  const startCampaign = () => {
+    if (!selectedTemplate || selectedContacts.length === 0) {
+      alert("Please select a template and at least one contact");
+      return;
+    }
+    // If campaign was paused, continue from currentContactIndex
+    setCampaignStatus("running");
+  };
+
+  const pauseResumeCampaign = () => {
+    setCampaignStatus((prev) =>
+      prev === "running" ? "paused" : "running"
+    );
+  };
+
+  const cancelCampaign = () => {
+    setCampaignStatus("idle");
+    setCurrentContactIndex(0);
   };
 
   return (
     <ClientLayout pageTitle="Campaigns">
-      <div style={styles.page}>
-        {/* LEFT CONTENT */}
-        <div style={styles.main}>
-          <h1>Campaigns</h1>
-          <p>Create and manage campaigns here.</p>
+      <div className="campaign-page">
+        {/* LEFT: TEMPLATE PREVIEW */}
+        <div className="campaign-main" ref={previewRef}>
+          <h3>Message Template Preview</h3>
 
-          <p>
-            <strong>Selected Contacts:</strong> {selectedContacts.length}
-          </p>
+          {!selectedTemplate && (
+            <p className="empty-preview">Select a template from the grid below</p>
+          )}
 
-          {/* MESSAGE TEMPLATE BOX */}
-          <div style={styles.templateBox}>
-            <h3 style={styles.templateTitle}>Message Template</h3>
+          {selectedTemplate && (
+            <div className="message-bubble">
+              {selectedTemplate.header_type === "text" &&
+                selectedTemplate.header_text && (
+                  <div className="message-header">{selectedTemplate.header_text}</div>
+                )}
+              {selectedTemplate.header_type === "image" &&
+                selectedTemplate.header_media_url && (
+                  <img
+                    src={selectedTemplate.header_media_url}
+                    alt="template"
+                    className="message-image"
+                  />
+                )}
+              {selectedTemplate.header_type === "video" &&
+                selectedTemplate.header_media_url && (
+                  <video
+                    src={selectedTemplate.header_media_url}
+                    controls
+                    className="message-video"
+                  />
+                )}
+              {selectedTemplate.message_body && (
+                <div className="message-body">{selectedTemplate.message_body}</div>
+              )}
+            </div>
+          )}
 
-            <select
-              value={selectedTemplateId}
-              onChange={(e) => setSelectedTemplateId(e.target.value)}
-              style={styles.templateSelect}
-            >
-              <option value="">Select a template</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+          {/* PROGRESS PANEL */}
+          {campaignStatus !== "idle" && (
+            <div className="campaign-progress-panel">
+              <div className="progress-header">
+                <h4>Campaign Status</h4>
+              </div>
 
-            <textarea
-              style={styles.templatePreview}
-              value={selectedTemplate?.message || ""}
-              placeholder="Template preview will appear here..."
-              readOnly
-            />
-          </div>
+              {(campaignStatus === "running" ||
+                campaignStatus === "paused" ||
+                campaignStatus === "completed") && (
+                <>
+                  <p>
+                    {campaignStatus === "running"
+                      ? "Sending message to selected contacts..."
+                      : campaignStatus === "paused"
+                      ? "Campaign paused"
+                      : "message have been sent!"}
+                  </p>
+
+                  {/* Show contact list only while running or paused */}
+                  {(campaignStatus === "running" || campaignStatus === "paused") && (
+                    <div className="contact-progress-list">
+                      {selectedContacts.map((contactId, index) => {
+                        const contact = contacts.find((c) => c.contactid === contactId);
+                        return (
+                          <div
+                            key={contactId}
+                            className={`contact-item-progress ${
+                              index === currentContactIndex &&
+                              campaignStatus !== "completed"
+                                ? "active"
+                                : ""
+                            }`}
+                          >
+                            {contact?.name} ({contact?.phonenum})
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="progress-bar-wrapper">
+                    <div
+                      className="progress-bar"
+                      style={{
+                        width: `${
+                          ((campaignStatus === "completed"
+                            ? selectedContacts.length
+                            : currentContactIndex) /
+                            selectedContacts.length) *
+                          100
+                        }%`,
+                      }}
+                    />
+                  </div>
+
+                  
+                </>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* RIGHT CONTACTS PANEL */}
-        <div style={styles.contacts}>
-          <h3 style={styles.contactsTitle}>Contacts</h3>
-
-          <div style={styles.actions}>
-            <button style={styles.actionBtn} onClick={selectAll}>
-              Select All
-            </button>
-            <button style={styles.actionBtn} onClick={clearAll}>
-              Clear
-            </button>
-          </div>
-
-          {loading && <p>Loading contacts...</p>}
-          {error && <p style={{ color: "salmon" }}>{error}</p>}
-
-          <div style={styles.list}>
-            {contacts.map((contact) => (
-              <label key={contact.contactid} style={styles.contactItem}>
-                <input
-                  type="checkbox"
-                  checked={selectedContacts.includes(contact.contactid)}
-                  onChange={() => toggleContact(contact.contactid)}
-                />
-                <div>
-                  <div style={styles.name}>{contact.name}</div>
-                  <div style={styles.phone}>{contact.phonenum}</div>
-                </div>
-              </label>
-            ))}
-
-            {!loading && contacts.length === 0 && (
-              <p>No contacts found</p>
+        {/* RIGHT: CONTACTS + BUTTONS */}
+        <div className="campaign-right-panel">
+          <div className="campaign-buttons-top">
+            {campaignStatus === "idle" && (
+              <button className="btn start" onClick={startCampaign}>
+                ▶ Start Campaign
+              </button>
             )}
 
-            <button
-              style={{
-                ...styles.campaignBtn,
-                opacity:
-                  selectedContacts.length === 0 || !selectedTemplateId
-                    ? 0.5
-                    : 1,
-                cursor:
-                  selectedContacts.length === 0 || !selectedTemplateId
-                    ? "not-allowed"
-                    : "pointer",
-              }}
-              disabled={
-                selectedContacts.length === 0 || !selectedTemplateId
-              }
-              onClick={() => {
-                console.log("Contacts:", selectedContacts);
-                console.log("Template:", selectedTemplate);
-              }}
-            >
-              Start Campaign
-            </button>
+            {campaignStatus !== "idle" && (
+              <>
+                {/* Pause/Resume toggle */}
+                <button className="btn pause" onClick={pauseResumeCampaign}>
+                  {campaignStatus === "running" ? "⏸ Pause Campaign" : "▶ Resume Campaign"}
+                </button>
+
+                <button className="btn cancel" onClick={cancelCampaign}>
+                  ✖ Cancel Campaign
+                </button>
+              </>
+            )}
           </div>
+
+          <div className="campaign-contacts">
+            <h3>Contacts</h3>
+            <div className="contacts-actions">
+              <button className="btn select-clear" onClick={selectAll}>
+                Select All
+              </button>
+              <button className="btn select-clear" onClick={clearAll}>
+                Clear
+              </button>
+            </div>
+            {loading && <p>Loading...</p>}
+            {error && <p className="error-text">{error}</p>}
+
+            {/* Only show contacts list if not completed */}
+            {campaignStatus !== "completed" && (
+              <div className="contacts-list">
+                {contacts.map((c) => (
+                  <label key={c.contactid} className="contact-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedContacts.includes(c.contactid)}
+                      onChange={() => toggleContact(c.contactid)}
+                      disabled={campaignStatus === "running"}
+                    />
+                    <div>
+                      <div>{c.name}</div>
+                      <div>{c.phonenum}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* GRID VIEW */}
+      <div className="grid-wrapper">
+        <h3>Templates Grid View</h3>
+        <div className="template-grid">
+          {templates.map((t) => {
+            const isSelected = selectedTemplateId === t.id;
+            return (
+              <div
+                key={t.id}
+                className={`grid-card ${isSelected ? "selected" : ""}`}
+                onClick={() => toggleTemplate(t.id)}
+              >
+                <div className="grid-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleTemplate(t.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <strong>{t.template_name}</strong>
+
+                {t.header_type === "image" && t.header_media_url && (
+                  <img src={t.header_media_url} alt="template" className="grid-image" />
+                )}
+                {t.header_type === "video" && t.header_media_url && (
+                  <video src={t.header_media_url} className="grid-video" muted />
+                )}
+                {t.header_type === "text" && t.header_text && (
+                  <div className="grid-header-text">{t.header_text}</div>
+                )}
+
+                <div className="grid-body">{t.message_body}</div>
+                <div className="grid-footer">
+                  <span>{t.category}</span>
+                  <span>{t.template_type}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </ClientLayout>
@@ -180,120 +332,3 @@ function Campaigns() {
 }
 
 export default Campaigns;
-
-/* ===================== STYLES ===================== */
-
-const styles = {
-  page: {
-    display: "flex",
-    gap: "30px",
-    alignItems: "flex-start",
-  },
-
-  main: {
-    flex: 1,
-    background: "#ffffff",
-    padding: "30px",
-    borderRadius: "10px",
-    boxShadow: "0 4px 15px hsl(0, 22%, 97%)",
-  },
-
-  templateBox: {
-    marginTop: "25px",
-    padding: "20px",
-    borderRadius: "10px",
-    background: "#f7f9fc",
-    border: "1px solid #cdc1c1",
-  },
-
-  templateTitle: {
-    fontSize: "16px",
-    fontWeight: "600",
-    marginBottom: "12px",
-  },
-
-  templateSelect: {
-    width: "100%",
-    padding: "10px",
-    borderRadius: "6px",
-    border: "1px solid hsl(0, 14%, 80%)",
-    marginBottom: "12px",
-  },
-
-  templatePreview: {
-    width: "100%",
-    minHeight: "120px",
-    padding: "12px",
-    borderRadius: "6px",
-    border: "1px solid rgb(77, 54, 54)",
-    resize: "none",
-    background: "#efe9e9",
-  },
-
-  contacts: {
-    width: "340px",
-    background: "rgb(255, 255, 255)",
-    color: "#0b0404",
-    padding: "20px",
-    borderRadius: "12px",
-
-  },
-
-  contactsTitle: {
-    fontSize: "18px",
-    marginBottom: "15px",
-  },
-
-  actions: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "15px",
-  },
-
-  actionBtn: {
-    flex: 1,
-    padding: "8px",
-    border: "none",
-    borderRadius: "6px",
-    background: "#e8edf0",
-    color: "#1422eac7",
-    fontSize: "13px",
-    cursor: "pointer",
-  },
-
-  list: {
-    maxHeight: "360px",
-    overflowY: "auto",
-  },
-
-  contactItem: {
-    display: "flex",
-    gap: "10px",
-    padding: "10px",
-    borderRadius: "8px",
-    background: "#eaeced",
-    marginBottom: "8px",
-  },
-
-  name: {
-    fontSize: "14px",
-    fontWeight: "600",
-  },
-
-  phone: {
-    fontSize: "12px",
-    color: "#0a0c0b",
-  },
-
-  campaignBtn: {
-    marginTop: "20px",
-    width: "100%",
-    padding: "14px",
-    border: "none",
-    borderRadius: "10px",
-    background: "linear-gradient(90deg, #008eed, #0547d6e3)",
-    color: "#040303f0",
-    fontSize: "16px",
-    fontWeight: "600",
-  },
-};

@@ -198,6 +198,21 @@ function Contacts() {
             <p style={{ margin: 0, fontSize: "0.9em" }}>
               CSV must have 'name' and 'phnnum' columns.
             </p>
+            <button
+            type="button"
+            onClick={handleExportCsv}
+            style={{
+            padding: "2px 6px",
+            fontSize: "0.75rem",
+            marginLeft: "8px",
+            backgroundColor: "#28a745",
+            color: "white",
+            border: "none",
+            borderRadius: "3px",
+            cursor: "pointer",
+          }}>
+          Export
+        </button>
             <input
               type="file"
               accept=".csv"
@@ -253,9 +268,7 @@ function Contacts() {
               contacts.map((contact) => (
                 <tr key={contact.contactid}>
                   <td style={tdStyle}>{contact.name}</td>
-
                   <td style={tdStyle}>{contact.phonenum}</td>
-
                   <td style={tdStyle}>
                     <button
                       onClick={() => handleDeleteContact(contact.contactid)}
