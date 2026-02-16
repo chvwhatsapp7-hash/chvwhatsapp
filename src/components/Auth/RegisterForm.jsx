@@ -1,4 +1,15 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
+
+function RegisterPage() {
+  const location = useLocation();
+  
+  const isAdmin =
+    new URLSearchParams(location.search).get("from") === "admin";
+
+  return <RegisterForm isAdmin={isAdmin} />;
+}
+
 
 function RegisterForm({ isAdmin }) {
   // const navigate = useNavigate(); // <-- REMOVE THIS line
@@ -15,7 +26,7 @@ function RegisterForm({ isAdmin }) {
     role: "client",
 
   });
-
+  const adminId = localStorage.getItem("user_id");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -34,20 +45,26 @@ function RegisterForm({ isAdmin }) {
   };
 
   const mapToBackendPayload = (fd) => {
+    console.log("isAdmin:", isAdmin);
+    console.log("adminId:", adminId);
 
-    return {
-      first_name: fd.firstName,
-      last_name: fd.lastName,
-      email: fd.email,
-      password: fd.password,
-      whatsapp_number: fd.personalWhatsappNumber,
-      business_name: fd.businessName,
-      country: fd.businessCountry,
-      website: fd.businessWebsiteUrl,
-      gst_num: fd.GST,
-
-    };
+  return {
+    first_name: fd.firstName,
+    last_name: fd.lastName,
+    email: fd.email,
+    password: fd.password,
+    whatsapp_number: fd.personalWhatsappNumber,
+    country: fd.businessCountry,
+    website: fd.businessWebsiteUrl,
+    gst_num: fd.GST,
+    role: isAdmin ? fd.role : "client",   // 👈 only admin can choose role
+    api_key: null,
+    created_by: isAdmin && adminId ? Number(adminId) : 0     // 👈 replace 1 with real admin id later
   };
+
+};
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,13 +94,14 @@ function RegisterForm({ isAdmin }) {
     try {
       const payload = mapToBackendPayload(formData);
 
-      const url = "/api/register";
+      const API_BASE = process.env.REACT_APP_API_URL;
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+
+      const response = await fetch(`${API_BASE}/api/register`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+});
 
       let data = null;
       try {
@@ -98,16 +116,18 @@ function RegisterForm({ isAdmin }) {
         );
         // clear form
         setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          personalWhatsappNumber: "",
-          password: "",
-          businessName: "",
-          businessCountry: "",
-          businessWebsiteUrl: "",
-          GST: "",
-        });
+  firstName: "",
+  lastName: "",
+  email: "",
+  personalWhatsappNumber: "",
+  password: "",
+  businessName: "",
+  businessCountry: "",
+  businessWebsiteUrl: "",
+  GST: "",
+  role: "client",   // 👈 ADD THIS
+});
+
       } else if (response.status === 409) {
         setError((data && data.message) || "User already exists.");
       } else if (response.status >= 400 && response.status < 500) {
@@ -193,6 +213,7 @@ function RegisterForm({ isAdmin }) {
 )}
 
 
+
         </div>
 
         {/* Business Details */}
@@ -235,6 +256,9 @@ function RegisterForm({ isAdmin }) {
             </div>
           </div>
 
+          
+
+
           <p style={{ textAlign: "center", fontSize: "0.85em", color: "#666", marginBottom: "25px" }}>
             By creating your account, you agree to our <a href="#" style={linkStyle}>Terms and Conditions</a>, <a href="#" style={linkStyle}>Privacy Policy</a> and <a href="#" style={linkStyle}>Refund Policy</a>.
           </p>
@@ -243,10 +267,9 @@ function RegisterForm({ isAdmin }) {
 
         </div>
 
-        <button type="submit" style={buttonStyle}>Create account</button>
       </form>
     </div>
   );
 }
 
-export default RegisterForm;
+export default RegisterPage;

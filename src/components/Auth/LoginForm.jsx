@@ -31,7 +31,8 @@ const LoginForm = () => {
         // --- END MOCK AUTHENTICATION LOGIC ---
 
         try {
-        const API_BASE = process.env.REACT_APP_API_URL || '';
+        const API_BASE = process.env.REACT_APP_API_URL;
+
         const response = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             credentials: 'include',
@@ -48,6 +49,10 @@ body: JSON.stringify({ email, password}),
         }
         
         login(data.user, data.user.role, data.token);
+        
+        localStorage.setItem("user_id", data.user.user_id);
+        localStorage.setItem("role", data.user.role);
+
 
         if (data.user.role === 'admin') {
             navigate('/admin');
