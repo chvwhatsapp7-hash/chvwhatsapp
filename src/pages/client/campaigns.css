@@ -586,14 +586,314 @@
 .progress-container {
   width: 100%;
   height: 8px;
-  background: #eee;
-  border-radius: 5px;
+  background-color: #e5e5e5;
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 8px;
+  position: relative;
+
+  /* FORCE left alignment even if parent is flex-centered */
+  display: block !important;
 }
 
 .progress-bar {
   height: 100%;
-  background: #4caf50;
-  transition: width 0.3s ease;
+  background-color: #4caf50;
+  width: 0%;
+  transition: width 0.3s linear;
+
+  /* Make sure it starts from left */
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.contacts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.max-contacts-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.max-contacts-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Header layout */
+.contacts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Wrapper for dropdown */
+.max-contacts-wrapper {
+  position: relative;
+}
+
+/* Dropdown styling */
+.range-select {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  background-color: #ffffff;
+  cursor: pointer;
+  outline: none;
+  min-width: 140px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover effect */
+.range-select:hover {
+  border-color: #999;
+}
+
+/* Focus effect */
+.range-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+/* Optional: cleaner option text */
+.range-select option {
+  padding: 6px;
+}
+
+/* Overlay background */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* Dialog container */
+.dialog-box {
+  background: #ffffff;
+  width: 420px;
+  max-width: 95%;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  animation: dialogFadeIn 0.2s ease-in-out;
+}
+
+/* Title */
+.dialog-box h2 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Form group */
+.dialog-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.dialog-group label {
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Inputs & Select */
+.dialog-group input,
+.dialog-group select,
+.dialog-group textarea {
+  padding: 8px 10px;
+  border: 1px solid #06b22c;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.dialog-group input:focus,
+.dialog-group select:focus,
+.dialog-group textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Textarea resize */
+.dialog-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Actions container */
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Buttons common style */
+.dialog-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* Fade animation */
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= Overlay ================= */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* ================= Dialog Box ================= */
+.dialog-box {
+  background: #ffffff;
+  width: 450px;
+  max-width: 100%;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: fadeSlideIn 0.25s ease-out;
+}
+
+/* ================= Title ================= */
+.dialog-box h3 {
+  margin: 0 0 22px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ================= Form Layout ================= */
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ================= Labels ================= */
+.dialog-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+/* ================= Inputs & Select ================= */
+.dialog-form input,
+.dialog-form select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+/* Focus effect */
+.dialog-form input:focus,
+.dialog-form select:focus {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ================= Actions ================= */
+.dialog-actions {
+  margin-top: 26px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Common button style */
+.dialog-actions button {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Cancel button */
+.dialog-actions button:first-child {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.dialog-actions button:first-child:hover {
+  background-color: #d1d5db;
+}
+
+/* Create button */
+.dialog-actions button:last-child {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.dialog-actions button:last-child:hover {
+  background-color: #1e40af;
+}
+
+/* Disabled state */
+.dialog-actions button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* ================= Animation ================= */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
