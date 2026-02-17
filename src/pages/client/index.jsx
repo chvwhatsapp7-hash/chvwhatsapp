@@ -10,6 +10,10 @@ export default function ClientHomePage() {
   const [user, setUser] = useState({ name: "", phone: "" });
   const [messages, setMessages] = useState([]);
 
+  // ✅ Campaign state added
+  const [recentCampaigns, setRecentCampaigns] = useState([]);
+  const [campaignLoading, setCampaignLoading] = useState(false);
+
   const stats = {
     totalCampaigns: 0,
     messagesSentToday: 0,
@@ -18,13 +22,9 @@ export default function ClientHomePage() {
   };
 
   const filteredContacts = contacts.filter(c =>
-    c.name?.toLowerCase().includes(search.toLowerCase())
-  );
 
-  const recentCampaigns = [
-    { id: 1, name: 'Diwali Sale', status: 'Running' },
-    { id: 2, name: 'New Launch Promo', status: 'Completed' },
-  ];
+  c.name?.toLowerCase().includes(search.toLowerCase())
+);
 
   const notifications = [
     'WhatsApp API connected successfully',
@@ -107,6 +107,46 @@ const fetchUser = async () => {
     console.error(err);
   }
 };
+
+/* ================= FETCH CAMPAIGNS (NEW) ================= */
+  const fetchRecentCampaigns = async () => {
+    setCampaignLoading(true);
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/user/campaign?action=list`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch campaigns");
+      }
+
+      setRecentCampaigns(data.data || []);
+    } catch (err) {
+      console.error("Error fetching campaigns:", err);
+    } finally {
+      setCampaignLoading(false);
+    }
+  };
+
+  /* ================= USE EFFECT ================= */
+  useEffect(() => {
+    fetchContacts();
+    fetchUser();
+    fetchRecentCampaigns(); // ✅ Added here
+  }, []);
+
+
+    useEffect(() => {
+  console.log("Contacts updated:", contacts);
+}, [contacts]);
+
   
 
   useEffect(() => {
@@ -120,6 +160,7 @@ const fetchUser = async () => {
     name: m.sender_name || "Campaign Message",
     text: m.message || m.text
   }));
+
 
   return (
     
@@ -206,6 +247,7 @@ const fetchUser = async () => {
             ))}
           </div>
         </div>
+        
 
         {/* CONTACTS — FILTER WORKS */}
         <div style={{ ...card, padding: 0 }} className="contact-box">
@@ -283,13 +325,53 @@ const fetchUser = async () => {
         </div>
       </div>
 
-      {/* RECENT CAMPAIGNS */}
+       {/* RECENT CAMPAIGNS */}
       <div style={{ marginTop: '30px' }}>
-        <div style={card}>
-          <h3>Recent Campaigns</h3>
-          {recentCampaigns.map(c => (
-            <p key={c.id}><strong>{c.name}</strong> — {c.status}</p>
-          ))}
+        <div style={{ ...card, padding: 0 }}>
+
+          <div style={{
+            background: '#075E54',
+            color: '#fff',
+            padding: '12px 16px',
+            borderTopLeftRadius: '8px',
+            borderTopRightRadius: '8px',
+            fontWeight: 'bold'
+          }}>
+            Recent Campaigns
+          </div>
+
+          <div style={{
+            padding: '16px',
+            background: '#ECE5DD',
+            maxHeight: '220px',
+            overflowY: 'scroll'
+          }}>
+
+            {campaignLoading && <p>Loading campaigns...</p>}
+
+            {recentCampaigns.map(c => (
+              <div key={c.campaignid} style={{
+                background: '#DCF8C6',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                marginBottom: '10px',
+                maxWidth: '75%',
+              }}>
+                <div style={{
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  color: '#075E54'
+                }}>
+                  {c.campaign_name}
+                </div>
+
+                <div style={{ fontSize: '13px', marginTop: '4px' }}>
+                  Status: {c.status ? "Running" : "Stopped"}
+                </div>
+              </div>
+            ))}
+
+          </div>
         </div>
       </div>
 
