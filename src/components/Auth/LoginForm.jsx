@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+
 const LoginForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    
+
     const { login } = useAuth();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -28,14 +31,15 @@ const LoginForm = () => {
         // --- END MOCK AUTHENTICATION LOGIC ---
 
         try {
-        const API_BASE = process.env.REACT_APP_API_URL || '';
+        const API_BASE = process.env.REACT_APP_API_URL;
+
         const response = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             credentials: 'include',
             headers: {
             'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+body: JSON.stringify({ email, password}),
         });
 
         const data = await response.json();
@@ -45,6 +49,10 @@ const LoginForm = () => {
         }
         
         login(data.user, data.user.role, data.token);
+        
+        localStorage.setItem("user_id", data.user.user_id);
+        localStorage.setItem("role", data.user.role);
+
 
         if (data.user.role === 'admin') {
             navigate('/admin');
@@ -94,7 +102,15 @@ const LoginForm = () => {
                     required
                     style={inputStyle}
                 />
-                <button type="submit" style={buttonStyle}>Login</button>
+
+
+<button 
+    type="submit" 
+    style={buttonStyle}
+    disabled={isLoading}
+>
+    {isLoading ? "Logging in..." : "Login"}
+</button>
             </form>
             <p style={{ marginTop: '20px', fontSize: '0.9em' }}>
                 Don't have an account? <Link to="/register" style={linkStyle}>Register here</Link>

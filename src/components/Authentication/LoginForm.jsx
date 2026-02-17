@@ -44,13 +44,22 @@ const LoginForm = () => {
             throw new Error(data.message || 'Failed to login');
         }
         
-        login(data.user, data.user.role, data.token);
+       // Save to localStorage
+localStorage.setItem("user_id", data.user_id);
+localStorage.setItem("role", data.role);
 
-        if (data.user.role === 'admin') {
-            navigate('/admin');
-        } else if (data.user.role === 'client') {
-            navigate('/client');
-        }
+// Call auth context properly
+login(
+  { id: data.user_id, email },   // minimal user object
+  data.role
+);
+
+if (data.role === 'admin') {
+    navigate('/admin');
+} else if (data.role === 'client') {
+    navigate('/client');
+}
+
 
         } catch (err) {
         setError(err.message || 'An error occurred. Please try again.');

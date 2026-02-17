@@ -1,4 +1,5 @@
-import React, { useState ,useEffect} from 'react';
+
+  import React, { useState ,useEffect} from 'react';
 import ClientLayout from '../../components/Layout/ClientLayout';
 
 export default function ClientHomePage() {
@@ -7,6 +8,7 @@ export default function ClientHomePage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState('');
   const [user, setUser] = useState({ name: "", phone: "" });
+  const [messages, setMessages] = useState([]);
 
   // ✅ Campaign state added
   const [recentCampaigns, setRecentCampaigns] = useState([]);
@@ -17,23 +19,21 @@ export default function ClientHomePage() {
     messagesSentToday: 0,
     messagesSentMonth: 0,
     activeCampaigns: 0,
-
   };
 
-
-  const recentMessages = [
-    { id: 1, name: 'Sneha', text: 'Campaign delivered successfully' },
-    { id: 2, name: 'Ravi', text: 'User replied to message' },
-    { id: 3, name: 'Anjali', text: 'Message read' },
-    { id: 4, name: 'Sneha', text: 'Follow-up message sent' },
-    { id: 5, name: 'Ravi', text: 'Delivery confirmed' },
-  ];
-
-  
-
   const filteredContacts = contacts.filter(c =>
+<<<<<<< HEAD
   c.name?.toLowerCase().includes(search.toLowerCase())
 );
+=======
+    c.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const recentCampaigns = [
+    { id: 1, name: 'Diwali Sale', status: 'Running' },
+    { id: 2, name: 'New Launch Promo', status: 'Completed' },
+  ];
+>>>>>>> ab0af88f3b43442b31734e0ba089a96df7858337
 
   const notifications = [
     'WhatsApp API connected successfully',
@@ -54,33 +54,49 @@ export default function ClientHomePage() {
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
   };
+
   const API_BASE = process.env.REACT_APP_API_URL || "";
 
   const fetchContacts = async () => {
-  setLoading(true);
-  setError("");
+    setLoading(true);
+    setError("");
 
+    try {
+      const res = await fetch(`${API_BASE}/api/Contact`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch contacts");
+      }
+
+      setContacts(Array.isArray(data) ? data : data.contacts || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
   try {
-    const res = await fetch(`${API_BASE}/api/Contact`, {
+    const userId = 1;
+    const res = await fetch(`${API_BASE}/api/messages`, {
       method: "GET",
       credentials: "include",
     });
 
     const data = await res.json();
-    console.log("STEP 3 - API response:", data);
-
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to fetch contacts");
-    }
-
-    setContacts(Array.isArray(data) ? data : data.contacts || []);
+    if (!res.ok) throw new Error();
+    setMessages(data.messages || []);
   } catch (err) {
-    console.error("Fetch error:", err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
+    console.error(err);
   }
 };
+
 const fetchUser = async () => {
   try {
     const res = await fetch(`${API_BASE}/api/user/profile?action=profile`, {
@@ -90,21 +106,17 @@ const fetchUser = async () => {
     });
 
     const data = await res.json();
-
-    if (!res.ok) throw new Error(data.message || "Failed to fetch user");
-
     const u = data.user;
 
     setUser({
       name: `${u.first_name || ""} ${u.last_name || ""}`,
       phone: u.whatsapp_number || ""
     });
-
-    console.log("User info fetched:", u);
   } catch (err) {
-    console.error("Error fetching user:", err);
+    console.error(err);
   }
 };
+<<<<<<< HEAD
 /* ================= FETCH CAMPAIGNS (NEW) ================= */
   const fetchRecentCampaigns = async () => {
     setCampaignLoading(true);
@@ -143,8 +155,26 @@ const fetchUser = async () => {
     useEffect(() => {
   console.log("Contacts updated:", contacts);
 }, [contacts]);
+=======
+  
+
+  useEffect(() => {
+    fetchContacts();
+    fetchUser();
+    fetchMessages();
+  }, []);
+
+  const recentMessages = messages.map(m => ({
+    id: m.id || m.messageid,
+    name: m.sender_name || "Campaign Message",
+    text: m.message || m.text
+  }));
+>>>>>>> ab0af88f3b43442b31734e0ba089a96df7858337
 
   return (
+    
+
+
     <ClientLayout pageTitle="Dashboard Overview">
 
       {/* Stats */}
@@ -376,3 +406,4 @@ const fetchUser = async () => {
     </ClientLayout>
   );
 }
+
