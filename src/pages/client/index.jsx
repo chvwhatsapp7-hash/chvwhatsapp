@@ -22,18 +22,9 @@ export default function ClientHomePage() {
   };
 
   const filteredContacts = contacts.filter(c =>
-<<<<<<< HEAD
+
   c.name?.toLowerCase().includes(search.toLowerCase())
 );
-=======
-    c.name?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const recentCampaigns = [
-    { id: 1, name: 'Diwali Sale', status: 'Running' },
-    { id: 2, name: 'New Launch Promo', status: 'Completed' },
-  ];
->>>>>>> ab0af88f3b43442b31734e0ba089a96df7858337
 
   const notifications = [
     'WhatsApp API connected successfully',
@@ -116,7 +107,7 @@ const fetchUser = async () => {
     console.error(err);
   }
 };
-<<<<<<< HEAD
+
 /* ================= FETCH CAMPAIGNS (NEW) ================= */
   const fetchRecentCampaigns = async () => {
     setCampaignLoading(true);
@@ -155,7 +146,7 @@ const fetchUser = async () => {
     useEffect(() => {
   console.log("Contacts updated:", contacts);
 }, [contacts]);
-=======
+
   
 
   useEffect(() => {
@@ -169,7 +160,7 @@ const fetchUser = async () => {
     name: m.sender_name || "Campaign Message",
     text: m.message || m.text
   }));
->>>>>>> ab0af88f3b43442b31734e0ba089a96df7858337
+
 
   return (
     
