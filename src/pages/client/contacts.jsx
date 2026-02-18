@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import ClientLayout from "../../components/Layout/ClientLayout";
 
@@ -38,6 +38,7 @@ function Contacts() {
 
   useEffect(() => {
     fetchContacts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddContact = async (e) => {

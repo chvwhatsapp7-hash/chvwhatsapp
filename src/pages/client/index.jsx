@@ -112,6 +112,7 @@ export default function ClientHomePage() {
     fetchUser();
     fetchMessages();
     fetchRecentCampaigns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const recentMessages = messages.map(m => ({

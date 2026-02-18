@@ -25,7 +25,7 @@ function ClientProfile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-    const API_BASE = process.env.REACT_APP_API_URL || "";
+  const API_BASE = process.env.REACT_APP_API_URL || "";
 
 
   useEffect(() => {
@@ -65,6 +65,7 @@ function ClientProfile() {
     };
 
     fetchProfile();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e) => {
