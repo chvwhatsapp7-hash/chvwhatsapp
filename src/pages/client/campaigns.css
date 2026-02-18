@@ -494,6 +494,7 @@
 .campaign-name {
   font-weight: bold;
   text-transform: uppercase;
+  color: #111827;
   margin: 0;
 }
 
@@ -597,3 +598,15 @@
   background: #4caf50;
   transition: width 0.3s ease;
 }
+
+/* ===== Dialog Buttons Fix ===== */
+.dialog-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 90px;
+}
+
