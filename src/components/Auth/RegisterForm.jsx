@@ -259,9 +259,9 @@ function RegisterForm({ isAdmin }) {
           
 
 
-          <p style={{ textAlign: "center", fontSize: "0.85em", color: "#666", marginBottom: "25px" }}>
+          {/* <p style={{ textAlign: "center", fontSize: "0.85em", color: "#666", marginBottom: "25px" }}>
             By creating your account, you agree to our <a href="#" style={linkStyle}>Terms and Conditions</a>, <a href="#" style={linkStyle}>Privacy Policy</a> and <a href="#" style={linkStyle}>Refund Policy</a>.
-          </p>
+          </p> */}
 
           <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Creating account..." : "Create account"}</button>
 
