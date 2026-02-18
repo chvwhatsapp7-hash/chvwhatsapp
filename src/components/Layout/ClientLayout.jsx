@@ -27,10 +27,18 @@ const layoutStyles = {
     backgroundColor: '#25D366', color: '#075E54', fontWeight: 'bold',
   },
   mainContent: { flexGrow: 1, padding: '30px', overflowY: 'auto' },
-  header: {
-    backgroundColor: 'white', padding: '20px 30px', marginBottom: '30px',
-    borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-  },
+header: {
+  background: "linear-gradient(145deg, rgba(13,148,136,0.18), rgba(13,148,136,0.08))",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  padding: "20px 30px",
+  marginBottom: "30px",
+  borderRadius: "12px",
+  border: "1px solid rgba(13,148,136,0.25)",
+  boxShadow: "0 8px 30px rgba(13,148,136,0.15), inset 0 1px 0 rgba(255,255,255,0.4)",
+  transition: "transform 0.3s ease, box-shadow 0.3s ease"
+},
+
   headerTitle: { fontSize: '1.8em', color: '#333' },
 };
 

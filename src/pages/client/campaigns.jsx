@@ -15,15 +15,14 @@ function Campaigns() {
 
   const [campaigns, setCampaigns] = useState([]);
   const [campaignLoading, setCampaignLoading] = useState(false);
-  const [selectedCampaignId, setSelectedCampaignId] = useState(null); // ✅ selected campaign
+  const [selectedCampaignId, setSelectedCampaignId] = useState(null);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [campaignName, setCampaignName] = useState("");
   const [creating, setCreating] = useState(false);
-  const [runningCampaignId, setRunningCampaignId] = useState(null); // ✅ track running campaign
+
+  const [runningCampaignId, setRunningCampaignId] = useState(null);
   const [progress, setProgress] = useState(0);
-
-
   const [pausedCampaignId, setPausedCampaignId] = useState(null);
 
   const previewRef = useRef(null);
@@ -86,8 +85,6 @@ function Campaigns() {
     }
   }
 
-  /* ================= CONTACT HANDLING ================= */
-
   const toggleContact = (id) => {
     setSelectedContacts((prev) =>
       prev.includes(id)
@@ -95,7 +92,7 @@ function Campaigns() {
         : [...prev, id]
     );
   };
-
+  
   const selectAll = () =>
     setSelectedContacts(contacts.map((c) => c.contactid));
 
@@ -151,145 +148,153 @@ function Campaigns() {
     }
   };
 
-  /* ================= HANDLE CAMPAIGN SELECTION ================= */
   const handleSelectCampaign = (campaign) => {
     setSelectedCampaignId(campaign.campaignid);
-    setSelectedTemplateId(campaign.templateid); // update preview
+    setSelectedTemplateId(campaign.templateid);
   };
- useEffect(() => {
-  let interval;
 
-  if (runningCampaignId) {
-    setProgress(0);
-    let value = 0;
+  useEffect(() => {
+    let interval;
 
-    interval = setInterval(() => {
-      value += 5;
-      setProgress(value);
+    if (runningCampaignId && pausedCampaignId !== runningCampaignId) {
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 5;
+        });
+      }, 300);
+    }
 
-      if (value >= 100) {
-        clearInterval(interval);
-      }
-    }, 300);
-  }
-
-  return () => clearInterval(interval);
-}, [runningCampaignId]);
+    return () => clearInterval(interval);
+  }, [runningCampaignId, pausedCampaignId]);
 
   return (
     <ClientLayout pageTitle="Campaigns">
       <div className="campaign-page">
-        {/* MESSAGE PREVIEW */}
         <div className="campaign-main" ref={previewRef}>
           <h3>Message Template Preview</h3>
-          {!selectedTemplate && <p className="empty-preview">Select a template</p>}
+
+          {!selectedTemplate && (
+            <p className="empty-preview">Select a template</p>
+          )}
+
           {selectedTemplate && (
             <div className="message-bubble">
-              <div className="message-body">{selectedTemplate.message_body}</div>
+              <div className="message-body">
+                {selectedTemplate.message_body}
+              </div>
             </div>
           )}
 
-          {/* CREATED CAMPAIGNS */}
           <div className="campaigns-list">
             <h3 className="campaignh3">Created Campaigns</h3>
+
             {campaignLoading && <p>Loading campaigns...</p>}
+
             {campaigns.map((c) => (
-  <div
-    key={c.campaignid}
-    className={`campaign-item ${
-      selectedCampaignId === c.campaignid ? "active" : ""
-    }`}
-    onClick={() => handleSelectCampaign(c)}
-  >
-    <input
-      type="radio"
-      name="selectedCampaign"
-      checked={selectedCampaignId === c.campaignid}
-      onChange={() => handleSelectCampaign(c)}
-      onClick={(e) => e.stopPropagation()}
-    />
+              <div
+                key={c.campaignid}
+                className={`campaign-item ${
+                  selectedCampaignId === c.campaignid ? "active" : ""
+                }`}
+                onClick={() => handleSelectCampaign(c)}
+              >
+                <input
+                  type="radio"
+                  name="selectedCampaign"
+                  checked={selectedCampaignId === c.campaignid}
+                  onChange={() => handleSelectCampaign(c)}
+                  onClick={(e) => e.stopPropagation()}
+                />
 
-    <span className="campaign-name">
-      {c.campaign_name}
-    </span>
+                <span
+                  className="campaign-name"
+                  style={{ width: "100%" }}
+                >
+                  {c.campaign_name}
 
-    {/* ✅ Show Start button ONLY if selected */}
-    {selectedCampaignId === c.campaignid && (
-  <div className="campaign-actions">
-    
-    {/* Show Start only if NOT running */}
-    {runningCampaignId !== c.campaignid && (
-      <button
-        className="btn start"
-        onClick={(e) => {
-          e.stopPropagation();
-          setRunningCampaignId(c.campaignid);
-        }}
-      >
-        Start
-      </button>
-    )}
+                  {runningCampaignId === c.campaignid && (
+                    <div
+                      className="progress-container"
+                      style={{
+                        margin: "6px auto 0",
+                        width: "70%",
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <div
+                        className="progress-bar"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                  )}
+                </span>
 
-    {/* Show Pause + Stop only if running */}
-    {runningCampaignId === c.campaignid && (
-  <>
-  {/* Progress Bar */}
-<div className="progress-container">
-  <div
-    className="progress-bar"
-    style={{ width: `${progress}%` }}
-  ></div>
-</div>
+                {selectedCampaignId === c.campaignid && (
+                  <div className="campaign-actions">
+                    {runningCampaignId !== c.campaignid && (
+                      <button
+                        className="btn start"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProgress(0);
+                          setPausedCampaignId(null);
+                          setRunningCampaignId(c.campaignid);
+                        }}
+                      >
+                        Start
+                      </button>
+                    )}
 
-    {/* If NOT paused → show Pause */}
-    {pausedCampaignId !== c.campaignid && (
-      <button
-        className="btn pause"
-        onClick={(e) => {
-          e.stopPropagation();
-          setPausedCampaignId(c.campaignid);
-        }}
-      >
-        Pause
-      </button>
-    )}
+                    {runningCampaignId === c.campaignid && (
+                      <>
+                        {pausedCampaignId !== c.campaignid && (
+                          <button
+                            className="btn pause"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPausedCampaignId(c.campaignid);
+                            }}
+                          >
+                            Pause
+                          </button>
+                        )}
 
-    {/* If paused → show Resume */}
-    {pausedCampaignId === c.campaignid && (
-      <button
-        className="btn resume"
-        onClick={(e) => {
-          e.stopPropagation();
-          setPausedCampaignId(null);
-        }}
-      >
-        Resume
-      </button>
-    )}
+                        {pausedCampaignId === c.campaignid && (
+                          <button
+                            className="btn resume"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPausedCampaignId(null);
+                            }}
+                          >
+                            Resume
+                          </button>
+                        )}
 
-    <button
-      className="btn stop"
-      onClick={(e) => {
-        e.stopPropagation();
-        setRunningCampaignId(null);
-        setPausedCampaignId(null);
-      }}
-    >
-      Stop
-    </button>
-  </>
-)}
-
-  </div>
-)}
-
-  </div>
-))}
-
+                        <button
+                          className="btn stop"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRunningCampaignId(null);
+                            setPausedCampaignId(null);
+                          }}
+                        >
+                          Stop
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
         <div className="campaign-right-panel">
           <div className="campaign-buttons-top">
             <button className="btn start" onClick={openCreateDialog}>
@@ -298,40 +303,96 @@ function Campaigns() {
           </div>
 
           <div className="campaign-contacts">
-            <h3>Contacts</h3>
 
-            <div className="contacts-actions">
-              <button onClick={selectAll}>Select All</button>
-              <button onClick={clearAll}>Clear</button>
-            </div>
+  <div className="contacts-header">
+    <h3>Contacts</h3>
 
-            {loading && <p>Loading contacts...</p>}
-            {error && <p className="error">{error}</p>}
+    <select
+      className="range-select"
+      onChange={(e) => {
+        const value = e.target.value;
 
-            <div className="contacts-list">
-              {contacts.map((c) => (
-                <label key={c.contactid} className="contact-item">
-                  <input
-                    type="checkbox"
-                    checked={selectedContacts.includes(c.contactid)}
-                    onChange={() => toggleContact(c.contactid)}
-                  />
-                  {c.name} ({c.phonenum})
-                </label>
-              ))}
-            </div>
-          </div>
+        if (!value) {
+          setSelectedContacts([]);
+          return;
+        }
+
+        const [start, end] = value.split("-").map(Number);
+
+        const rangedContacts = contacts
+          .slice(start, end)
+          .map((c) => c.contactid);
+
+        setSelectedContacts(rangedContacts);
+      }}
+    >
+      <option value="">Select Range</option>
+
+      {(() => {
+        const step = 10;
+        const options = [];
+
+        for (let i = 0; i < contacts.length; i += step) {
+          const end = Math.min(i + step, contacts.length);
+
+          options.push(
+            <option key={i} value={`${i}-${end}`}>
+              {i + 1} - {end}
+            </option>
+          );
+        }
+
+        return options;
+      })()}
+    </select>
+  </div>
+
+  <div className="contacts-actions">
+    <button onClick={selectAll}>Select All</button>
+    <button onClick={clearAll}>Clear</button>
+  </div>
+
+  {loading && <p>Loading contacts...</p>}
+  {error && <p className="error">{error}</p>}
+
+  <div className="contacts-list">
+    {[...contacts]
+      .sort((a, b) => {
+        const aSelected = selectedContacts.includes(a.contactid);
+        const bSelected = selectedContacts.includes(b.contactid);
+
+        if (aSelected && !bSelected) return -1;
+        if (!aSelected && bSelected) return 1;
+
+        return 0;
+      })
+      .map((c) => (
+        <label key={c.contactid} className="contact-item">
+          <input
+            type="checkbox"
+            checked={selectedContacts.includes(c.contactid)}
+            onChange={() => toggleContact(c.contactid)}
+          />
+          {c.name} ({c.phonenum})
+        </label>
+      ))}
+  </div>
+
+</div>
+
+
         </div>
       </div>
 
-      {/* TEMPLATE GRID */}
       <div className="grid-wrapper">
         <h3>Templates</h3>
         <div className="template-grid">
           {templates.map((t) => (
             <div
               key={t.id}
-              className={`grid-card ${selectedTemplateId === t.id ? "selected" : ""}`}
+              className={`grid-card ${
+                selectedTemplateId === t.id ? "selected" : ""
+              }`}
               onClick={() => toggleTemplate(t.id)}
             >
               <strong>{t.template_name}</strong>
@@ -341,7 +402,6 @@ function Campaigns() {
         </div>
       </div>
 
-      {/* CREATE CAMPAIGN DIALOG */}
       {isDialogOpen && (
         <div className="dialog-overlay">
           <div className="dialog-box">
@@ -361,7 +421,9 @@ function Campaigns() {
                 <label>Select Template</label>
                 <select
                   value={selectedTemplateId || ""}
-                  onChange={(e) => setSelectedTemplateId(Number(e.target.value))}
+                  onChange={(e) =>
+                    setSelectedTemplateId(Number(e.target.value))
+                  }
                 >
                   <option value="">Select</option>
                   {templates.map((t) => (
@@ -374,7 +436,9 @@ function Campaigns() {
             </div>
 
             <div className="dialog-actions">
-              <button onClick={() => setIsDialogOpen(false)}>Cancel</button>
+              <button onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </button>
 
               <button onClick={submitCampaign} disabled={creating}>
                 {creating ? "Creating..." : "Create"}
