@@ -25,6 +25,8 @@ function ClientProfile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const API_BASE = process.env.REACT_APP_API_URL || "";
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -32,7 +34,7 @@ function ClientProfile() {
         setLoading(true);
 
         const res = await fetch(
-          "http://localhost:3000/api/user/profile?action=profile",
+          `${API_BASE}/api/user/profile?action=profile`,
           {
             method: "GET",
             credentials: "include",
@@ -63,6 +65,7 @@ function ClientProfile() {
     };
 
     fetchProfile();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e) => {
@@ -79,7 +82,7 @@ function ClientProfile() {
       setLoading(true);
 
       const res = await fetch(
-        "http://localhost:3000/api/user/profile?action=profile",
+        `${API_BASE}/api/user/profile?action=profile`,
         {
           method: "PUT",
           credentials: "include",

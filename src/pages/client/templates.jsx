@@ -2,10 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 // set backend origin here.
-const API_BASE =
-  process.env.REACT_APP_API_BASE ||
-  process.env.NEXT_PUBLIC_API_BASE ||
-  "http://localhost:3000";
+const API_BASE = process.env.REACT_APP_API_BASE
 
 // Simple Icons for UI polish
 const Icons = {

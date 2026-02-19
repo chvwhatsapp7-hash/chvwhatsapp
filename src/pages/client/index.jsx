@@ -4,8 +4,8 @@ import './index.css';
 
 export default function ClientHomePage() {
   const [contacts, setContacts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState("");
   const [search, setSearch] = useState('');
   const [user, setUser] = useState({ name: "", phone: "" });
   const [messages, setMessages] = useState([]);
@@ -41,8 +41,8 @@ export default function ClientHomePage() {
   /* ===== ALL YOUR FETCH FUNCTIONS UNCHANGED ===== */
 
   const fetchContacts = async () => {
-    setLoading(true);
-    setError("");
+    // setLoading(true);
+    // setError("");
     try {
       const res = await fetch(`${API_BASE}/api/Contact`, {
         method: "GET",
@@ -52,9 +52,9 @@ export default function ClientHomePage() {
       if (!res.ok) throw new Error(data.message || "Failed to fetch contacts");
       setContacts(Array.isArray(data) ? data : data.contacts || []);
     } catch (err) {
-      setError(err.message);
+      // setError(err.message);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -112,6 +112,7 @@ export default function ClientHomePage() {
     fetchUser();
     fetchMessages();
     fetchRecentCampaigns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const recentMessages = messages.map(m => ({

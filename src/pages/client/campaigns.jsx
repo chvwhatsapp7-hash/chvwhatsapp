@@ -32,10 +32,11 @@ function Campaigns() {
   );
 
   useEffect(() => {
-    fetchTemplates();
-    fetchContacts();
-    fetchCampaigns();
-  }, []);
+  fetchTemplates();
+  fetchContacts();
+  fetchCampaigns();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   async function fetchTemplates() {
     try {
