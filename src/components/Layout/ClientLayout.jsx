@@ -1,13 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-<<<<<<< HEAD
-/*import { useNavigate } from 'react-router-dom';*/
-=======
-// import { useNavigate } from 'react-router-dom';
->>>>>>> edc602008aaaf25f601463a176bad5f6db33fba1
 
-// Reusing the same style object from AdminLayout for consistency
 const layoutStyles = {
   layoutContainer: { display: 'flex', minHeight: '100vh', backgroundColor: '#f0f2f5' },
   sidebar: {
@@ -83,6 +78,24 @@ header: {
 const ClientLayout = ({ children, pageTitle }) => {
   const location = useLocation();
   const { logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
+const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+useEffect(() => {
+  const mediaQuery = window.matchMedia('(max-width: 768px)');
+
+  const handleChange = (e) => {
+    setIsMobile(e.matches);
+  };
+
+  setIsMobile(mediaQuery.matches);
+
+  mediaQuery.addEventListener('change', handleChange);
+
+  return () => mediaQuery.removeEventListener('change', handleChange);
+}, []);
+
+
 
   const clientNavLinks = [
     { name: 'Overview', path: '/client', icon: '📊' },
@@ -94,7 +107,16 @@ const ClientLayout = ({ children, pageTitle }) => {
 
   return (
     <div style={layoutStyles.layoutContainer}>
-      <aside style={layoutStyles.sidebar}>
+<aside
+  style={{
+    ...layoutStyles.sidebar,
+    transform: isMobile
+      ? (isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)')
+      : 'translateX(0)',
+    transition: 'transform 0.3s ease',
+    zIndex: 1000
+  }}
+>
         <div style={layoutStyles.logoContainer}>
           <div style={layoutStyles.logo}>CHV Whatsapp</div>
           <p style={{ fontSize: '0.8em', color: 'rgba(255,255,255,0.7)', margin: '5px 0 0 0' }}>CLIENT PANEL</p>
@@ -138,7 +160,38 @@ const ClientLayout = ({ children, pageTitle }) => {
 
         </div>
       </aside>
-     <main style={layoutStyles.mainContent}>
+      {isMobile && isSidebarOpen && (
+  <div
+    onClick={() => setIsSidebarOpen(false)}
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      background: 'rgba(0,0,0,0.4)',
+      zIndex: 999
+    }}
+  />
+)}
+
+<main
+
+  style={{
+    ...layoutStyles.mainContent,
+    marginLeft: isMobile ? '0' : '250px'
+  }}
+>
+  
+
+ <button
+  onClick={() => setIsSidebarOpen(true)}
+  className="hamburger-btn"
+>
+  ☰
+</button>
+
+
   {pageTitle && (
     <header style={layoutStyles.header}>
       <h1 style={layoutStyles.headerTitle}>{pageTitle}</h1>
@@ -151,5 +204,6 @@ const ClientLayout = ({ children, pageTitle }) => {
     </div>
   );
 };
+
 
 export default ClientLayout;

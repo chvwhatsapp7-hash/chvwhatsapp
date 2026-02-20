@@ -65,9 +65,11 @@ function App() {
 <Route
   path="/admin/allusers"
   element={
-    <AdminLayout pageTitle="All Users">
-      <AllUsers />
-    </AdminLayout>
+    <PrivateRoute role="admin">
+      <AdminLayout pageTitle="All Users">
+        <AllUsers />
+      </AdminLayout>
+    </PrivateRoute>
   }
 />
 

@@ -1,41 +1,78 @@
 import React from 'react';
 import AdminLayout from '../../components/Layout/AdminLayout';
+import './index.css';
 
-const AdminHomePage = () => {
-  // Mock data for Admin Dashboard
+export default function AdminHomePage() {
+
   const adminStats = {
     totalClients: 150,
     activeClients: 120,
     totalMessages: '1.2M',
+    systemHealth: '99.9%',
   };
 
-  const cardStyle = {
-    backgroundColor: 'white', padding: '25px', borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-  };
-  const cardTitleStyle = { fontSize: '1.1em', color: '#555', marginBottom: '10px' };
-  const cardValueStyle = { fontSize: '2.5em', fontWeight: 'bold', color: '#075E54' };
+  const recentActivities = [
+    "New client registered",
+    "Campaign approved",
+    "Server backup completed",
+    "Payment received from Client A"
+  ];
 
   return (
     <AdminLayout pageTitle="Admin Dashboard">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '25px' }}>
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Total Clients</h3>
-          <span style={cardValueStyle}>{adminStats.totalClients}</span>
+
+      <div className="admin-dashboard">
+
+        {/* ===== STATS ===== */}
+        <div className="stats-grid">
+          <div className="card">
+            <strong>Total Clients</strong>
+            <h2 className="count">{adminStats.totalClients}</h2>
+          </div>
+
+          <div className="card">
+            <strong>Active Clients</strong>
+            <h2 className="count">{adminStats.activeClients}</h2>
+          </div>
+
+          <div className="card">
+            <strong>Total Messages</strong>
+            <h2 className="count">{adminStats.totalMessages}</h2>
+          </div>
+
+          <div className="card">
+            <strong>System Health</strong>
+            <h2 className="count green">{adminStats.systemHealth}</h2>
+          </div>
         </div>
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Active Clients</h3>
-          <span style={cardValueStyle}>{adminStats.activeClients}</span>
+
+        {/* ===== MAIN GRID ===== */}
+        <div className="main-grid">
+
+          {/* RECENT ACTIVITY */}
+          <div className="card no-padding">
+            <div className="card-header">Recent Activity</div>
+            <div className="scroll-area">
+              {recentActivities.map((activity, i) => (
+                <div key={i} className="message-bubble">
+                  {activity}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* SYSTEM STATUS */}
+          <div className="card">
+            <h3>System Status</h3>
+            <p>API Status: <strong className="green">Connected</strong></p>
+            <p>Server Load: Normal</p>
+            <p>Delivery Rate: 99.2%</p>
+          </div>
+
         </div>
-        
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Total Messages Processed</h3>
-          <span style={cardValueStyle}>{adminStats.totalMessages}</span>
-        </div>
+
       </div>
-      {/* Add more admin dashboard components here, like recent activity logs, charts, etc. */}
+
     </AdminLayout>
   );
-};
-
-export default AdminHomePage;
+}

@@ -227,3 +227,23 @@ ul li {
   box-shadow: 0 12px 28px rgba(255, 77, 79, 0.55) !important;
   transform: translateY(-2px);
 }
+/* ===== HAMBURGER RESPONSIVE ===== */
+
+.hamburger-btn {
+  display: none;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+
+  .hamburger-btn {
+    display: block !important;
+    font-size: 26px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 15px;
+    color: black;
+  }
+
+}

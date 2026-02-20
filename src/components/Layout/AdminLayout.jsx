@@ -1,35 +1,78 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-// Reusable styles for both layouts
 const layoutStyles = {
   layoutContainer: { display: 'flex', minHeight: '100vh', backgroundColor: '#f0f2f5' },
+
   sidebar: {
-    width: '250px', backgroundColor: '#075E54', color: 'white',
-    padding: '20px 0', boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-    display: 'flex', flexDirection: 'column',
+    width: '250px',
+    background: 'linear-gradient(180deg, #0f766e, #065f46)',
+    color: 'white',
+    padding: '20px 0px 0px 0px',
+    boxShadow: '2px 0 15px rgba(0,0,0,0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    height: '100vh',
+    overflowY: 'auto'
   },
+
   logoContainer: {
-    padding: '0 20px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.2)',
-    marginBottom: '20px', textAlign: 'center',
+    padding: '0 20px 20px 20px',
+    borderBottom: '1px solid rgba(255,255,255,0.2)',
+    marginBottom: '20px',
+    textAlign: 'center',
   },
-  logo: { fontSize: '1.8em', fontWeight: 'bold', color: '#25D366' },
+
+  logo: {
+    fontSize: '1.8em',
+    fontWeight: '700',
+    WebkitTextFillColor: 'white',
+  },
+
   navList: { listStyle: 'none', padding: '0', margin: '0', flexGrow: 1 },
   navItem: { marginBottom: '5px' },
+
   navLink: {
-    display: 'flex', alignItems: 'center', padding: '12px 20px',
-    textDecoration: 'none', color: 'white', fontSize: '1em',
-    transition: 'background-color 0.2s ease', borderRadius: '0 20px 20px 0', marginRight: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 20px',
+    textDecoration: 'none',
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: '1em',
+    borderRadius: '0 20px 20px 0',
+    marginRight: '10px',
+    transition: 'all 0.25s ease',
   },
+
   activeNavLink: {
-    backgroundColor: '#25D366', color: '#075E54', fontWeight: 'bold',
+    background: 'rgba(255,255,255,0.2)',
+    color: '#ffffff',
+    fontWeight: '600',
+    boxShadow: 'inset 4px 0 0 #ffffff',
   },
-  mainContent: { flexGrow: 1, padding: '30px', overflowY: 'auto' },
+
+  mainContent: {
+    flexGrow: 1,
+    padding: '30px',
+    marginLeft: '250px',
+    overflowY: 'auto'
+  },
+
   header: {
-    backgroundColor: 'white', padding: '20px 30px', marginBottom: '30px',
-    borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+    background: "linear-gradient(145deg, rgba(13,148,136,0.18), rgba(13,148,136,0.08))",
+    backdropFilter: "blur(14px)",
+    WebkitBackdropFilter: "blur(14px)",
+    padding: "20px 30px",
+    marginBottom: "30px",
+    borderRadius: "12px",
+    border: "1px solid rgba(13,148,136,0.25)",
+    boxShadow: "0 8px 30px rgba(13,148,136,0.15)",
   },
+
   headerTitle: { fontSize: '1.8em', color: '#333' },
 };
 
@@ -37,26 +80,56 @@ const AdminLayout = ({ children, pageTitle }) => {
   const location = useLocation();
   const { logout } = useAuth();
 
-  const adminNavLinks = [
-  { name: 'Dashboard', path: '/admin', icon: '👑' },
-  { name: 'Add Client', path: '/admin/add-client', icon: '🏢' },
-  { name: 'All Users', path: '/admin/allusers', icon: '👥' }   // ✅ Added
-];
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+
+    const handleChange = (e) => {
+      setIsMobile(e.matches);
+    };
+
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  const adminNavLinks = [
+    { name: 'Dashboard', path: '/admin' },
+    { name: 'Add Client', path: '/admin/add-client' },
+    { name: 'All Users', path: '/admin/allusers' },
+  ];
 
   return (
     <div style={layoutStyles.layoutContainer}>
-      <aside style={layoutStyles.sidebar}>
+
+      {/* SIDEBAR */}
+      <aside
+        style={{
+          ...layoutStyles.sidebar,
+          transform: isMobile
+            ? (isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)')
+            : 'translateX(0)',
+          transition: 'transform 0.3s ease',
+          zIndex: 1000
+        }}
+      >
         <div style={layoutStyles.logoContainer}>
-          <div style={layoutStyles.logo}>WANotifier</div>
-          <p style={{ fontSize: '0.8em', color: 'rgba(255,255,255,0.7)', margin: '5px 0 0 0' }}>ADMIN PANEL</p>
+          <div style={layoutStyles.logo}>CHV Whatsapp</div>
+          <p style={{ fontSize: '0.8em', color: 'rgba(255,255,255,0.7)', margin: '5px 0 0 0' }}>
+            ADMIN PANEL
+          </p>
         </div>
+
         <nav>
           <ul style={layoutStyles.navList}>
             {adminNavLinks.map((link) => (
               <li key={link.name} style={layoutStyles.navItem}>
                 <Link
                   to={link.path}
+                  onClick={() => isMobile && setIsSidebarOpen(false)}
                   style={{
                     ...layoutStyles.navLink,
                     ...(location.pathname === link.path ? layoutStyles.activeNavLink : {}),
@@ -69,18 +142,67 @@ const AdminLayout = ({ children, pageTitle }) => {
             ))}
           </ul>
         </nav>
+
         <div style={{ padding: '20px' }}>
-          <button onClick={logout} style={{ width: '100%', padding: '10px', background: '#FF6347', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          <button
+            onClick={logout}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: 'rgba(247, 65, 65, 0.79)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease',
+            }}
+          >
             Logout
           </button>
         </div>
       </aside>
-      <main style={layoutStyles.mainContent}>
-        <header style={layoutStyles.header}>
-          <h1 style={layoutStyles.headerTitle}>{pageTitle}</h1>
-        </header>
+
+      {/* OVERLAY */}
+      {isMobile && isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 999
+          }}
+        />
+      )}
+
+      {/* MAIN CONTENT */}
+      <main
+        style={{
+          ...layoutStyles.mainContent,
+          marginLeft: isMobile ? '0' : '250px'
+        }}
+      >
+        {isMobile && (
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="hamburger-btn"
+          >
+            ☰
+          </button>
+        )}
+
+        {pageTitle && (
+          <header style={layoutStyles.header}>
+            <h1 style={layoutStyles.headerTitle}>{pageTitle}</h1>
+          </header>
+        )}
+
         {children}
       </main>
+
     </div>
   );
 };
