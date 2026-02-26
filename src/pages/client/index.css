@@ -293,11 +293,11 @@ body {
 }
 
 .primary-btn {
-  flex: 0 0 140px;        /* fixed small box width */
-  height: 60px;           /* equal height */
+  flex: 0 0 160px;        /* fixed small box width */
+  height: 50px;           /* equal height */
   
   padding: 6px 6px;
-  border-radius: 12px !important;
+  border-radius: 30px !important;
   border:none;
 
   background: linear-gradient(135deg, var(--primary-dark), var(--primary));
