@@ -8,12 +8,12 @@ const LoginForm = () => {
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
+    // const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setIsLoading(true);
+        // setIsLoading(true);
 
         // --- MOCK AUTHENTICATION LOGIC ---
         // if (email === 'admin@example.com' && password === 'password') {
@@ -64,7 +64,7 @@ if (data.role === 'admin') {
         } catch (err) {
         setError(err.message || 'An error occurred. Please try again.');
         } finally {
-        setIsLoading(false);
+        // setIsLoading(false);
         }
     };
 

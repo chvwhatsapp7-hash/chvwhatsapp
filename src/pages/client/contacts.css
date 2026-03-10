@@ -1,0 +1,223 @@
+/* ===== Layout Grid (UNCHANGED STRUCTURE) ===== */
+.contacts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* ===== Form Card (Glass Theme) ===== */
+.form-card {
+  padding: 1.5rem;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(13, 148, 136, 0.18),
+    rgba(13, 148, 136, 0.08)
+  );
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border: 1px solid rgba(13, 148, 136, 0.25);
+
+  box-shadow:
+    0 8px 30px rgba(13, 148, 136, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ===== Inputs (Glass Inputs Like Dialog) ===== */
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  box-sizing: border-box;
+
+  border-radius: 8px;
+  border: 1px solid rgba(13, 148, 136, 0.3);
+
+  background: rgba(255, 255, 255, 0.85);
+
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+}
+
+/* ===== Primary Button (Dashboard Gradient Style) ===== */
+.primary-btn {
+  width: 100%;
+  padding: 0.75rem;
+
+  background: linear-gradient(135deg, #0f766ddd, #0d9488);
+  color: white;
+
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+  transition: 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Export Button (Soft Teal Glass) ===== */
+.export-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  margin-left: 8px;
+
+  background: rgba(10, 151, 139, 0.305);
+  color: #0d9488;
+
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  border-radius: 6px;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.export-btn:hover {
+  background: rgba(13, 148, 136, 0.25);
+}
+
+/* ===== Delete Button (Soft Red Glass Style) ===== */
+.delete-btn {
+  padding: 0.3rem 0.6rem;
+
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* ===== Table (Glass Styled Like Campaign Panels) ===== */
+.contacts-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+
+  background: linear-gradient(
+    145deg,
+    rgba(13, 148, 136, 0.18),
+    rgba(13, 148, 136, 0.08)
+  );
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Table Header */
+.contacts-table th {
+  padding: 0.75rem;
+  text-align: left;
+
+  background: rgba(15, 138, 128, 0.31);
+  border-bottom: 1px solid rgba(13, 148, 136, 0.3);
+  color: #0f172a;
+}
+
+/* Table Data */
+.contacts-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(13, 148, 136, 0.15);
+}
+
+/* Hover row effect */
+.contacts-table tr:hover {
+  background: rgba(13, 148, 136, 0.08);
+}
+
+/* ===== Messages ===== */
+.error-text {
+  color: #ef4444;
+}
+
+.success-text {
+  color: #0d9488;
+}
+/* ==========================================
+   📱 MOBILE RESPONSIVE FIX (NO THEME CHANGE)
+========================================== */
+
+@media (max-width: 1024px) {
+  /* Slightly reduce grid gap for tablets */
+  .contacts-grid {
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+
+  /* Stack form and table vertically */
+  .contacts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Prevent table overflow breaking layout */
+  .contacts-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Keep table readable on small screens */
+  .contacts-table th,
+  .contacts-table td {
+    white-space: nowrap;
+  }
+
+  /* Make export button wrap properly */
+  .export-btn {
+    margin-top: 6px;
+    margin-left: 0;
+  }
+
+  /* Reduce padding slightly for tight screens */
+  .form-card {
+    padding: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* Slightly reduce font size for better fit */
+  .contacts-table th,
+  .contacts-table td {
+    font-size: 0.85rem;
+    padding: 0.6rem;
+  }
+
+  .primary-btn {
+    font-size: 0.9rem;
+  }
+
+  .delete-btn {
+    font-size: 0.8rem;
+  }
+}

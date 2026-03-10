@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import ClientLayout from "../../components/Layout/ClientLayout";
+import "./contacts.css";
 
 function Contacts() {
   const [contacts, setContacts] = useState([]);
@@ -38,6 +39,7 @@ function Contacts() {
 
   useEffect(() => {
     fetchContacts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddContact = async (e) => {
@@ -161,67 +163,45 @@ function Contacts() {
         {success && <p style={{ color: "green" }}>Success: {success}</p>}
 
         {/* --- Forms --- */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "2rem",
-          }}
-        >
+       <div className="contacts-grid">
           {/* --- Add Single Contact --- */}
-          <form onSubmit={handleAddContact} style={formStyle}>
-            <h3>Add Single Contact</h3>
-            <input
+<form onSubmit={handleAddContact} className="form-card">            <input
               type="text"
               placeholder="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              style={inputStyle}
-            />
+className="form-input"            />
             <input
               type="text"
               placeholder="Phone Number (e.g., 91...)"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              style={inputStyle}
-            />
-            <button type="submit" disabled={loading} style={buttonStyle}>
-              {loading ? "Adding..." : "Add Contact"}
+className="form-input"            />
+<button type="submit" disabled={loading} className="primary-btn">              {loading ? "Adding..." : "Add Contact"}
             </button>
           </form>
 
           {/* --- Upload CSV --- */}
-          <form onSubmit={handleCsvUpload} style={formStyle}>
-            <h3>Upload CSV File</h3>
+<form onSubmit={handleCsvUpload} className="form-card">            <h3>Upload CSV File</h3>
             <p style={{ margin: 0, fontSize: "0.9em" }}>
               CSV must have 'name' and 'phnnum' columns.
             </p>
-            <button
-            type="button"
-            onClick={handleExportCsv}
-            style={{
-            padding: "2px 6px",
-            fontSize: "0.75rem",
-            marginLeft: "8px",
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "3px",
-            cursor: "pointer",
-          }}>
-          Export
-        </button>
+           <button
+  type="button"
+  onClick={handleExportCsv}
+  className="export-btn"
+>
+  Export
+</button>
             <input
               type="file"
               accept=".csv"
               onChange={(e) => setFile(e.target.files[0])}
               required
-              style={inputStyle}
-            />
-            <button type="submit" disabled={loading} style={buttonStyle}>
-              {loading ? "Uploading..." : "Upload CSV"}
+className="form-input"            />
+<button type="submit" disabled={loading} className="primary-btn">              {loading ? "Uploading..." : "Upload CSV"}
             </button>
           </form>
         </div>
@@ -255,34 +235,33 @@ function Contacts() {
 
         {/* --- Contacts List Table --- */}
         <h2 style={{ marginTop: "2rem" }}>Your Contacts</h2>
-        <table style={tableStyle}>
-          <thead>
+<table className="contacts-table">          <thead>
             <tr>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Phone Number</th>
-              <th style={thStyle}>Actions</th>
+              <th >Name</th>
+              <th >Phone Number</th>
+              <th >Actions</th>
             </tr>
           </thead>
           <tbody>
             {contacts.length > 0 ? (
               contacts.map((contact) => (
                 <tr key={contact.contactid}>
-                  <td style={tdStyle}>{contact.name}</td>
-                  <td style={tdStyle}>{contact.phonenum}</td>
-                  <td style={tdStyle}>
-                    <button
-                      onClick={() => handleDeleteContact(contact.contactid)}
-                      disabled={loading}
-                      style={deleteButtonStyle}
-                    >
-                      Delete
-                    </button>
+                  <td >{contact.name}</td>
+                  <td >{contact.phonenum}</td>
+                  <td >
+                   <button
+  onClick={() => handleDeleteContact(contact.contactid)}
+  disabled={loading}
+  className="delete-btn"
+>
+  Delete
+</button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="3" style={tdStyle}>
+                <td colSpan="3">
                   You have no contacts yet.
                 </td>
               </tr>
@@ -295,54 +274,6 @@ function Contacts() {
 }
 
 
-const formStyle = {
-  padding: "1.5rem",
-  border: "1px solid #ddd",
-  borderRadius: "8px",
-  backgroundColor: "#f9f9f9",
-};
-const inputStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  margin: "0.5rem 0",
-  boxSizing: "border-box",
-  borderRadius: "4px",
-  border: "1px solid #ccc",
-};
-const buttonStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  backgroundColor: "#007bff",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontSize: "1rem",
-};
 
-const deleteButtonStyle = {
-  padding: "0.3rem 0.6rem",
-  backgroundColor: "#dc3545",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontSize: "0.9rem",
-};
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse",
-  marginTop: "1rem",
-};
-const thStyle = {
-  backgroundColor: "#f2f2f2",
-  padding: "0.75rem",
-  textAlign: "left",
-  borderBottom: "2px solid #ddd",
-};
-const tdStyle = {
-  padding: "0.75rem",
-  borderBottom: "1px solid #ddd",
-};
 
 export default Contacts;

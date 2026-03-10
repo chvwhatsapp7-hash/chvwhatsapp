@@ -1,12 +1,10 @@
 // src/pages/client/templates.jsx
 import React, { useEffect, useState, useRef } from 'react';
+import"./templates.css"
+
 
 // set backend origin here.
-const API_BASE =
-  process.env.REACT_APP_API_BASE ||
-  process.env.NEXT_PUBLIC_API_BASE ||
-  "http://localhost:3000";
-
+const API_BASE = process.env.REACT_APP_API_URL || ""
 // Simple Icons for UI polish
 const Icons = {
   Plus: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>,
@@ -37,9 +35,11 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState([]);
   const [form, setForm] = useState(emptyTemplate);
   const [editing, setEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading] = useState(false);
   const [charCount, setCharCount] = useState(0);
   const fileRef = useRef(null);
+  const [uploadStatus, setUploadStatus] = useState(null);
+// null | "uploading" | "success" | "error"
 
   const [previewUrl, setPreviewUrl] = useState(""); // temporary preview only
 
@@ -106,25 +106,12 @@ export default function TemplatesPage() {
     updateField("buttons", b);
   }
 
-  async function handleUpload(e) {
-  const file = e.target.files?.[0];
+  const handleUpload = async (e) => {
+  const file = e.target.files[0];
   if (!file) return;
 
-  // Revoke previous local preview
-  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  setUploadStatus("uploading");
 
-  const localUrl = URL.createObjectURL(file);
-  setPreviewUrl(localUrl);
-
-  const type = file.type.startsWith("image/")
-    ? "image"
-    : file.type.startsWith("video/")
-    ? "video"
-    : "document";
-
-  updateField("header_type", type);
-
-  setUploading(true);
   const fd = new FormData();
   fd.append("file", file);
 
@@ -135,22 +122,30 @@ export default function TemplatesPage() {
       credentials: "include",
     });
 
-    if (!res.ok) throw new Error("Upload failed");
+    if (!res.ok) {
+      throw new Error("Upload failed");
+    }
 
     const js = await res.json();
-    // Set permanent backend URL
+
     updateField("header_media_url", js.url);
 
-    // Clear temporary preview
-    setPreviewUrl("");
+    setUploadStatus("success");
+
+    // Auto-hide success message after 2 seconds
+    setTimeout(() => {
+      setUploadStatus(null);
+    }, 2000);
+
   } catch (err) {
     console.error(err);
-    window.alert("Upload failed");
-  } finally {
-    setUploading(false);
-  }
-}
+    setUploadStatus("error");
 
+    setTimeout(() => {
+      setUploadStatus(null);
+    }, 3000);
+  }
+};
 
 
   function validateTemplate(t) {
@@ -284,8 +279,12 @@ async function saveTemplate(e) {
     <div className="wa-empty-state">No templates found.</div>
   )}
 
-  {templates.map((t) => (
-  <div
+{templates.map((t) => {
+  console.log("TEMPLATE:", t);
+  console.log("HEADER TYPE:", t.header_type);
+  console.log("MEDIA URL:", t.header_media_url);
+
+  return (  <div
     key={t.id}
     id={`template-${t.id}`}
     className={`wa-draft-item ${form.id === t.id ? "active" : ""}`}
@@ -398,7 +397,8 @@ async function saveTemplate(e) {
       </div>
     </div>
   </div>
-))}
+  );
+})}
 </div>
         </aside>
 
@@ -496,6 +496,23 @@ async function saveTemplate(e) {
     onChange={handleUpload}
     hidden
   />
+  {uploadStatus === "uploading" && (
+  <p style={{ color: "#888", marginTop: "6px" }}>
+    ⏳ Uploading...
+  </p>
+)}
+
+{uploadStatus === "success" && (
+  <p style={{ color: "green", marginTop: "6px" }}>
+    ✅ Upload successful!
+  </p>
+)}
+
+{uploadStatus === "error" && (
+  <p style={{ color: "red", marginTop: "6px" }}>
+    ❌ Upload failed. Try again.
+  </p>
+)}
 </div>
   )}
 </div>
@@ -652,567 +669,6 @@ async function saveTemplate(e) {
           )}
         </section>
       </main>
-
-      <style>{`
-        /* Global & Reset */
-        :root {
-            --wa-primary: #008069; /* WhatsApp Green */
-            --wa-primary-hover: #006b57;
-            --wa-bg: #f0f2f5;
-            --wa-white: #ffffff;
-            --wa-border: #e9edef;
-            --wa-text-main: #111b21;
-            --wa-text-sub: #54656f;
-            --wa-danger: #ea0038;
-            --wa-blue: #009de2;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        .wa-page-root {
-            font-family: var(--font-stack);
-            background-color: var(--wa-bg);
-            min-height: 100vh;
-            color: var(--wa-text-main);
-            display: flex;
-            flex-direction: column;
-        }
-
-        * { box-sizing: border-box; }
-
-        /* Topbar */
-        .wa-topbar {
-            background: var(--wa-white);
-            border-bottom: 1px solid var(--wa-border);
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .wa-title-group h1 { font-size: 20px; margin: 0; font-weight: 600; }
-        .wa-title-group p { font-size: 13px; color: var(--wa-text-sub); margin: 4px 0 0 0; }
-
-        /* Buttons */
-        .wa-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .wa-btn-primary {
-            background-color: var(--wa-primary);
-            color: white;
-        }
-        .wa-btn-primary:hover { background-color: var(--wa-primary-hover); }
-        .wa-btn-ghost { background: transparent; color: var(--wa-text-sub); }
-        .wa-btn-ghost:hover { background: #f5f6f6; color: var(--wa-text-main); }
-        .wa-btn-dashed {
-            width: 100%; border: 1px dashed #ccc; background: transparent; color: var(--wa-primary); padding: 8px; border-radius: 6px; cursor: pointer;
-        }
-        .wa-btn-dashed:hover { background: #f0fdf4; border-color: var(--wa-primary); }
-
-        /* Layout Grid */
-        .wa-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  height: calc(100vh - 74px);
-  overflow: hidden;
-}
-
-        /* Sidebar */
-        .wa-sidebar {
-  background: var(--wa-white);
-  border-right: 1px solid var(--wa-border);
-  display: flex;
-  flex-direction: column;
-  height: 100%;   /* 🔥 THIS IS THE FIX */
-  overflow: hidden;
-}
-        .wa-search-box {
-            padding: 16px;
-            border-bottom: 1px solid var(--wa-border);
-            position: relative;
-            color: var(--wa-text-sub);
-        }
-        .wa-search-box svg { position: absolute; left: 24px; top: 26px; }
-        .wa-search-box input {
-            width: 100%; padding: 8px 12px 8px 36px;
-            border-radius: 6px; border: 1px solid var(--wa-border); background: var(--wa-bg);
-            outline: none;
-        }
-        
-        .wa-list-item {
-            padding: 16px; border-bottom: 1px solid var(--wa-border); cursor: pointer; transition: background 0.1s;
-        }
-        .wa-list-item:hover { background: #f5f6f6; }
-        .wa-list-item.active { background: #f0fdf4; border-left: 4px solid var(--wa-primary); }
-        .wa-item-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 14px; }
-        .wa-status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
-        .status-success { background: #dcf8c6; color: #075e54; }
-        .status-error { background: #ffebee; color: #c62828; }
-        .status-warning { background: #fff3e0; color: #ef6c00; }
-        .status-neutral { background: #eceff1; color: #455a64; }
-        .wa-item-meta { font-size: 11px; color: var(--wa-text-sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .wa-item-body-preview { font-size: 13px; color: var(--wa-text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; }
-        .wa-item-actions { display: flex; gap: 8px; }
-        .wa-item-actions button {
-            background: none; border: 1px solid var(--wa-border); border-radius: 4px; padding: 4px; cursor: pointer; color: var(--wa-text-sub);
-        }
-        .wa-item-actions button:hover { background: var(--wa-bg); color: var(--wa-primary); }
-        .wa-item-actions button.danger:hover { color: var(--wa-danger); border-color: var(--wa-danger); }
-
-        /* Main Editor Area */
-        .wa-editor-area {
-            background: var(--wa-bg);
-            overflow-y: auto;
-            padding: 24px;
-        }
-        .wa-editor-grid {
-            display: grid;
-            grid-template-columns: minmax(400px, 1fr) 340px;
-            gap: 24px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        /* Form Panel */
-        .wa-form-panel {
-            background: var(--wa-white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--wa-border);
-        }
-        .wa-panel-header {
-            padding: 20px; border-bottom: 1px solid var(--wa-border); display: flex; justify-content: space-between; align-items: center;
-        }
-        .wa-panel-header h2 { margin: 0; font-size: 18px; }
-        .wa-actions-group { display: flex; gap: 10px; }
-        .wa-form-content { padding: 24px; }
-        
-        /* Form Controls */
-        .wa-field-group { margin-bottom: 20px; }
-        label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--wa-text-main); }
-        input[type=text], select, textarea {
-            width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;
-            font-size: 14px; font-family: inherit; transition: border 0.2s;
-        }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--wa-primary); ring: 2px solid #e7f5f2; }
-        small { font-size: 12px; color: var(--wa-text-sub); margin-top: 4px; display: block; }
-        .wa-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-        .wa-divider { margin: 24px 0; border: 0; border-top: 1px solid var(--wa-border); }
-        
-        /* Textarea with tools */
-        .wa-textarea-wrapper { border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; transition: border 0.2s; }
-        .wa-textarea-wrapper:focus-within { border-color: var(--wa-primary); }
-        .wa-textarea-wrapper textarea { border: none; resize: vertical; min-height: 120px; border-radius: 0; }
-        .wa-textarea-wrapper textarea:focus { ring: none; }
-        .wa-toolbar { background: #f8fafc; padding: 8px 12px; border-top: 1px solid var(--wa-border); display: flex; justify-content: space-between; align-items: center; }
-        .wa-chip-btn { background: #e2e8f0; border: none; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; }
-        .wa-chip-btn:hover { background: #cbd5e1; }
-        .wa-toolbar-help { font-size: 12px; color: #94a3b8; }
-        .label-row { display: flex; justify-content: space-between; }
-        .char-count { font-size: 12px; color: #94a3b8; }
-        .char-count.error { color: var(--wa-danger); }
-
-        /* Dynamic Inputs */
-        .wa-input-with-select { display: flex; gap: 0; }
-        .wa-input-with-select .prefix-select { width: 110px; border-top-right-radius: 0; border-bottom-right-radius: 0; background: #f8fafc; }
-        .wa-input-with-select input { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0; }
-        .wa-file-upload-wrapper { flex: 1; border: 1px solid #cbd5e1; border-left: 0; border-radius: 0 6px 6px 0; display: flex; align-items: center; padding: 0 10px; }
-        .wa-btn-upload { border: none; background: none; color: var(--wa-primary); font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; }
-        .file-status { font-size: 12px; margin-left: 10px; color: green; }
-
-        /* Buttons List */
-        .wa-button-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; }
-        .wa-button-inputs { display: grid; grid-template-columns: 120px 1fr 1fr; gap: 8px; flex: 1; }
-        .wa-icon-btn { width: 36px; height: 38px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--wa-border); background: white; border-radius: 6px; cursor: pointer; }
-        .wa-icon-btn.danger { color: var(--wa-danger); border-color: #fee2e2; background: #fef2f2; }
-
-        /* Preview Panel */
-        .wa-preview-panel { padding-top: 60px; }
-        .wa-sticky-preview { position: sticky; top: 20px; }
-        .wa-sticky-preview h3 { font-size: 14px; text-transform: uppercase; color: var(--wa-text-sub); letter-spacing: 0.5px; margin-bottom: 12px; }
-        .wa-phone-mockup {
-            background-color: #efe7dd;
-            background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
-            background-blend-mode: overlay;
-            border-radius: 16px;
-            padding: 20px 16px; /* slightly more padding */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border: 8px solid #111b21;
-            min-height: 400px;
-        }
-        .wa-message-card {
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
-            max-width: 100%;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* The Little Tail on the top left */
-        .wa-message-card::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -8px;
-            width: 0;
-            height: 0;
-            border: 8px solid transparent;
-            border-top-color: #fff;
-            border-right: 0;
-            transform: skew(15deg);
-        }
-        .msg-header-text { font-weight: bold; font-size: 15px; padding: 6px 8px; color: black; }
-        .msg-header-media { margin-bottom: 4px; border-radius: 6px; overflow: hidden; }
-        .msg-header-media img { object-fit: cover; }
-
-        .media-placeholder { 
-            background: #e9edef; height: 140px; display: flex; align-items: center; justify-content: center; 
-            color: #54656f; font-size: 12px; font-weight: 500;
-        }
-        .media-placeholder.filled { background: #dcf8c6; color: #075e54; }
-
-        .msg-content { 
-            font-size: 14px; line-height: 20px; color: #111b21; 
-            white-space: pre-wrap; padding: 6px 8px; 
-        }
-        .msg-var { font-weight: bold; color: var(--wa-text-sub); }
-
-        .msg-footer { font-size: 11px; color: #54656f; margin-top: 4px; padding: 0 8px; }
-        .msg-meta { font-size: 11px; color: #54656f; text-align: right; margin-top: 2px; padding: 4px 8px; }
-
-        /* Buttons Section */
-        .wa-message-actions {
-            border-top: 1px solid #e9edef; /* The separator line */
-            display: flex;
-            flex-direction: column;
-        }
-
-        .msg-action-btn {
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #007aff; /* Standard iOS/WhatsApp Action Blue */
-            font-size: 14px;
-            font-weight: 500;
-            cursor: default;
-            border-bottom: 1px solid #e9edef;
-            gap: 8px;
-        }
-
-        /* Remove border from last button */
-        .msg-action-btn:last-child {
-            border-bottom: none;
-        }
-
-        .btn-icon { font-size: 12px; }
-        .preview-note { margin-top: 12px; font-size: 11px; text-align: center; color: var(--wa-text-sub); }
-
-        /* Empty States */
-        .wa-empty-selection {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: var(--wa-text-sub);
-        }
-        .wa-empty-selection .illustration { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-        .wa-empty-selection h2 { color: var(--wa-text-main); margin-bottom: 8px; }
-        .wa-empty-state { padding: 32px; text-align: center; color: var(--wa-text-sub); }
-
-        @media (max-width: 900px) {
-            .wa-layout { grid-template-columns: 1fr; }
-            .wa-sidebar { height: 300px; border-bottom: 1px solid var(--wa-border); border-right: none; }
-            .wa-editor-grid { grid-template-columns: 1fr; }
-            .wa-preview-panel { padding-top: 0; }
-            .wa-sticky-preview { position: static; }
-        }
-            /* WhatsApp draft list background */
-.wa-list-container {
-  flex: 1;                   /* fills left column */
-  background: #efeae2;
-  padding: 12px;
-  overflow-y: auto;        /* FORCE scrollbar */
-  overflow-x: hidden;
-}
-
-/* Chat bubble */
-.wa-chat-bubble {
-  background: #dcf8c6;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  max-width: 92%;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
-  cursor: pointer;
-  position: relative;
-}
-
-.wa-chat-bubble.active {
-  outline: 2px solid var(--wa-primary);
-}
-
-/* Header */
-.wa-chat-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: #075e54;
-}
-
-.wa-chat-label {
-  font-weight: 500;
-  color: #667781;
-}
-
-/* Body */
-.wa-chat-body {
-  font-size: 14px;
-  line-height: 1.4;
-  color: #111b21;
-  white-space: pre-wrap;
-}
-
-.wa-draft-header-preview {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111b21;
-  margin-bottom: 4px;
-}
-
-.wa-draft-media-preview {
-  font-size: 12px;
-  color: #075e54;
-  background: rgba(0, 128, 105, 0.1);
-  padding: 4px 6px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-  width: fit-content;
-}
-
-/* Footer */
-.wa-chat-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-  font-size: 11px;
-  color: #667781;
-}
-
-.wa-chat-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-/* Actions */
-.wa-chat-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.wa-chat-actions button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #54656f;
-}
-
-.wa-chat-actions button:hover {
-  color: var(--wa-primary);
-}
-  .wa-draft-item {
-  background: #fcf8f8;
-  border-radius: 12px;
-  padding: 10px;
-  margin-bottom: 12px;
-  border: 1px solid #e9edef;
-  cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
-}
-
-.wa-draft-item:hover {
-  background: #f7f9fa;
-}
-
-.wa-draft-item.active {
-  box-shadow: 0 0 0 2px var(--wa-primary);
-}
-  .wa-draft-meta {
-  padding: 4px 6px 8px;
-}
-
-.wa-draft-title {
-  font-size: 23px;
-  font-weight: 600;
-  color: #111b21;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.wa-draft-sub {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: #667781;
-}
-
-.wa-draft-lang {
-  font-weight: 500;
-}
-
-.wa-draft-status-text {
-  text-transform: capitalize;
-}
-  .wa-draft-item .wa-chat-bubble {
-  margin: 0;
-}
-  /* Header field sizing fix */
-.wa-header-row {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.wa-header-type {
-  width: 150px;
-  height: 44px;
-  padding: 8px 10px;
-  font-size: 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #fff;
-}
-
-.wa-header-input {
-  flex: 1;
-  min-height: 56px;
-  max-height: 80px;
-  padding: 10px 12px;
-  font-size: 14px;
-  line-height: 1.4;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  resize: vertical;
-}
-  /* File upload same size as header text box */
-.wa-header-file-box {
-  flex: 1;
-  min-height: 56px;
-  max-height: 80px;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  font-size: 14px;
-  color: #475569;
-
-  border: 1px dashed #cbd5e1;
-  border-radius: 6px;
-  cursor: pointer;
-  background: #fff;
-}
-
-.wa-header-file-box:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-}
-.doc-preview {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #f9f9f9;
-  font-size: 14px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-  /* Thumbnail wrapper */
-.wa-thumb-wrapper {
-  position: relative;
-}
-
-/* Hover preview */
-.wa-thumb-hover {
-  position: absolute;
-  left: 110%;
-  top: 0;
-  z-index: 50;
-  display: none;
-  background: white;
-  padding: 6px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-
-.wa-thumb-hover img {
-  width: 220px;
-  border-radius: 8px;
-}
-
-/* Show on hover */
-.wa-thumb-wrapper:hover .wa-thumb-hover {
-  display: block;
-}
-
-/* Shared thumb */
-.wa-draft-thumb {
-  width: 100%;
-  max-height: 120px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: #e9edef;
-  margin-bottom: 6px;
-}
-
-/* Document badge */
-.wa-draft-thumb.document {
-  height: auto;
-  padding: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #075e54;
-  text-align: center;
-}
-/* Document preview */
-.doc-preview {
-  min-width: 220px;
-}
-
-.doc-preview-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #075e54;
-}
-
-.doc-icon {
-  font-size: 26px;
-}
-
-.doc-name {
-  word-break: break-all;
-}
-
-      `}</style>
-    </div>
+      </div>
   );
 }

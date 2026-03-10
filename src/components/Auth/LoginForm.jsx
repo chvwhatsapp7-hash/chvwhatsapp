@@ -11,12 +11,12 @@ const LoginForm = () => {
 
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
+    //const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setIsLoading(true);
+        //setIsLoading(true);
 
         // --- MOCK AUTHENTICATION LOGIC ---
         // if (email === 'admin@example.com' && password === 'password') {
@@ -63,7 +63,7 @@ body: JSON.stringify({ email, password}),
         } catch (err) {
         setError(err.message || 'An error occurred. Please try again.');
         } finally {
-        setIsLoading(false);
+        //setIsLoading(false);
         }
     };
 
@@ -107,9 +107,9 @@ body: JSON.stringify({ email, password}),
 <button 
     type="submit" 
     style={buttonStyle}
-    disabled={isLoading}
+   // disabled={isLoading}
 >
-    {isLoading ? "Logging in..." : "Login"}
+    {/* {isLoading ? "Logging in..." : "Login"} */}
 </button>
             </form>
             <p style={{ marginTop: '20px', fontSize: '0.9em' }}>

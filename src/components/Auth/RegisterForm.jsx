@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom";
 function RegisterPage() {
   const location = useLocation();
   
@@ -12,7 +11,7 @@ function RegisterPage() {
 
 
 function RegisterForm({ isAdmin }) {
-  // const navigate = useNavigate(); // <-- REMOVE THIS line
+ const navigate = useNavigate(); // <-- REMOVE THIS line
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -114,6 +113,11 @@ function RegisterForm({ isAdmin }) {
           (data && data.message) ||
             "Registration successful! Please check your email for verification."
         );
+        if (isAdmin) {
+  setTimeout(() => {
+    navigate("/admin");
+  }, 1000);
+}
         // clear form
         setFormData({
   firstName: "",
@@ -151,7 +155,7 @@ function RegisterForm({ isAdmin }) {
   const passwordInputWrapperStyle = { ...inputWrapperStyle, position: "relative" };
   const eyeIconStyle = { position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#888" };
   const buttonStyle = { width: "100%", padding: "15px", backgroundColor: "#00c6a7", color: "white", border: "none", borderRadius: "5px", fontSize: "1.1em", cursor: loading ? "not-allowed" : "pointer", marginTop: "20px", fontWeight: "bold" };
-  const linkStyle = { color: "#00c6a7", textDecoration: "none" };
+  // const linkStyle = { color: "#00c6a7", textDecoration: "none" };
 
   return (
     <div style={{ maxWidth: "600px", margin: "50px auto", padding: "30px", background: "white", borderRadius: "8px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}>
@@ -259,9 +263,9 @@ function RegisterForm({ isAdmin }) {
           
 
 
-          <p style={{ textAlign: "center", fontSize: "0.85em", color: "#666", marginBottom: "25px" }}>
+          {/* <p style={{ textAlign: "center", fontSize: "0.85em", color: "#666", marginBottom: "25px" }}>
             By creating your account, you agree to our <a href="#" style={linkStyle}>Terms and Conditions</a>, <a href="#" style={linkStyle}>Privacy Policy</a> and <a href="#" style={linkStyle}>Refund Policy</a>.
-          </p>
+          </p> */}
 
           <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Creating account..." : "Create account"}</button>
 
