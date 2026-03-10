@@ -1157,3 +1157,110 @@
   border-color: #0d9488;
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
 }
+/* ======================================================
+   📱 MOBILE RESPONSIVE FIX (NO THEME CHANGES)
+====================================================== */
+
+@media (max-width: 1024px) {
+
+  /* Stack main layout vertically */
+  .campaign-page {
+    flex-direction: column;
+  }
+
+  .campaign-right-panel {
+    width: 100%;
+  }
+
+  .campaign-contacts {
+    width: 100%;
+    max-height: none;
+  }
+
+  /* Make grid more compact */
+  .template-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+
+@media (max-width: 768px) {
+
+  /* Reduce overall spacing */
+  .campaign-page {
+    gap: 16px;
+  }
+
+  /* Stack top campaign buttons */
+  .campaign-buttons-top {
+    flex-direction: column;
+  }
+
+  .campaign-buttons-top .btn {
+    width: 100%;
+  }
+
+  /* Contacts action buttons stack */
+  .contacts-actions {
+    flex-direction: column;
+  }
+
+  .contacts-actions button {
+    width: 100%;
+  }
+
+  /* Make campaign items wrap properly */
+  .campaign-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .campaign-name {
+    width: 100%;
+  }
+
+  .campaign-item .btn {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* Grid single column on small screens */
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Dialog responsive */
+  .dialog-box {
+    width: 100%;
+    padding: 20px;
+  }
+
+  /* Contacts list height auto */
+  .contacts-list,
+  .campaigns-list {
+    height: auto;
+    max-height: 250px;
+  }
+}
+
+
+@media (max-width: 480px) {
+
+  /* Reduce padding for tight screens */
+  .campaign-main,
+  .campaign-contacts,
+  .grid-wrapper {
+    padding: 14px;
+  }
+
+  /* Smaller text slightly */
+  .campaign-item {
+    font-size: 14px;
+  }
+
+  .dialog-box h3,
+  .dialog-box h2 {
+    font-size: 18px;
+  }
+}

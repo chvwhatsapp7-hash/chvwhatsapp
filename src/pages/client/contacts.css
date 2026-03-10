@@ -161,3 +161,63 @@
 .success-text {
   color: #0d9488;
 }
+/* ==========================================
+   📱 MOBILE RESPONSIVE FIX (NO THEME CHANGE)
+========================================== */
+
+@media (max-width: 1024px) {
+  /* Slightly reduce grid gap for tablets */
+  .contacts-grid {
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+
+  /* Stack form and table vertically */
+  .contacts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Prevent table overflow breaking layout */
+  .contacts-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Keep table readable on small screens */
+  .contacts-table th,
+  .contacts-table td {
+    white-space: nowrap;
+  }
+
+  /* Make export button wrap properly */
+  .export-btn {
+    margin-top: 6px;
+    margin-left: 0;
+  }
+
+  /* Reduce padding slightly for tight screens */
+  .form-card {
+    padding: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* Slightly reduce font size for better fit */
+  .contacts-table th,
+  .contacts-table td {
+    font-size: 0.85rem;
+    padding: 0.6rem;
+  }
+
+  .primary-btn {
+    font-size: 0.9rem;
+  }
+
+  .delete-btn {
+    font-size: 0.8rem;
+  }
+}

@@ -1,26 +1,77 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/Layout/AdminLayout';
 import './index.css';
 
 export default function AdminHomePage() {
+  const [adminStats, setAdminStats] = useState({
+    totalClients: 0,
+    activeClients: 0,
+    totalMessages: 0,
+    systemHealth: '0%',
+  });
 
-  const adminStats = {
-    totalClients: 150,
-    activeClients: 120,
-    totalMessages: '1.2M',
-    systemHealth: '99.9%',
-  };
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [ setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentActivities = [
-    "New client registered",
-    "Campaign approved",
-    "Server backup completed",
-    "Payment received from Client A"
-  ];
+  const API_BASE = process.env.REACT_APP_API_URL || "";
+
+  // ===== Fetch Admin Stats =====
+  const fetchAdminStats = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/stats`, {
+        method: "GET",
+        cache: "no-store", // 🔥 force fresh data
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to fetch stats");
+
+      setAdminStats({
+        totalClients: data.totalClients || 0,
+        activeClients: data.activeClients || 0,
+        totalMessages: data.totalMessages || 0,
+        systemHealth: data.systemHealth || "0%",
+      });
+
+      setRecentActivities(data.recentActivities || []);
+    } catch (err) {
+      console.error("Error fetching admin stats:", err);
+    }
+  }, [API_BASE]);
+
+  // ===== Fetch Users =====
+  const fetchUsers = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/getUsers`, {
+        method: "GET",
+        cache: "no-store", // 🔥 force fresh data
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to fetch users");
+
+      setUsers(data.users || []);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  }, [API_BASE]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchAdminStats(), fetchUsers()]);
+      setLoading(false);
+    };
+    loadData();
+  }, [fetchAdminStats, fetchUsers]);
 
   return (
     <AdminLayout pageTitle="Admin Dashboard">
-
       <div className="admin-dashboard">
 
         {/* ===== STATS ===== */}
@@ -51,15 +102,22 @@ export default function AdminHomePage() {
 
           {/* RECENT ACTIVITY */}
           <div className="card no-padding">
-            <div className="card-header">Recent Activity</div>
+            <div className="card-header">Recent Activity (Past 3 Days)</div>
             <div className="scroll-area">
-              {recentActivities.map((activity, i) => (
-                <div key={i} className="message-bubble">
-                  {activity}
-                </div>
-              ))}
+              {loading ? (
+                <p>Loading...</p>
+              ) : recentActivities.length > 0 ? (
+                recentActivities.map((activity, i) => (
+                  <div key={i} className="message-bubble">{activity}</div>
+                ))
+              ) : (
+                <p>No recent activity</p>
+              )}
             </div>
           </div>
+
+         
+         
 
           {/* SYSTEM STATUS */}
           <div className="card">
@@ -70,9 +128,7 @@ export default function AdminHomePage() {
           </div>
 
         </div>
-
       </div>
-
     </AdminLayout>
   );
 }

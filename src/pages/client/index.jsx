@@ -7,17 +7,38 @@ export default function ClientHomePage() {
   // const [loading, setLoading] = useState(false);
   // const [error, setError] = useState("");
   const [search, setSearch] = useState('');
-  const [user, setUser] = useState({ name: "", phone: "" });
+const [user, setUser] = useState({
+  name: "",
+  phone: "",
+  messagingLimit: "",
+  qualityRating: "",
+  phoneStatus: ""
+});  
   const [messages, setMessages] = useState([]);
   const [recentCampaigns, setRecentCampaigns] = useState([]);
   const [campaignLoading, setCampaignLoading] = useState(false);
 
-  const stats = {
-    totalCampaigns: 0,
-    messagesSentToday: 0,
-    messagesSentMonth: 0,
-    activeCampaigns: 0,
-  };
+  
+const today = new Date().toISOString().split("T")[0];
+const currentMonth = new Date().getMonth();
+const currentYear = new Date().getFullYear();
+
+const stats = {
+  totalCampaigns: recentCampaigns.length,
+
+  activeCampaigns: recentCampaigns.filter(c => c.status === true).length,
+
+  messagesSentToday: messages.filter(m => {
+    if (!m.created_at) return false;
+    return m.created_at.split("T")[0] === today;
+  }).length,
+
+  messagesSentMonth: messages.filter(m => {
+    if (!m.created_at) return false;
+    const d = new Date(m.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  }).length,
+};
 
   const filteredContacts = contacts.filter(c =>
     c.name?.toLowerCase().includes(search.toLowerCase())
@@ -72,23 +93,35 @@ export default function ClientHomePage() {
     }
   };
 
-  const fetchUser = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/user/profile?action=profile`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" }
-      });
-      const data = await res.json();
-      const u = data.user;
-      setUser({
-        name: `${u.first_name || ""} ${u.last_name || ""}`,
-        phone: u.whatsapp_number || ""
-      });
-    } catch (err) {
-      console.error(err);
+const fetchUser = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/user/profile?action=profile`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const data = await res.json();
+
+    console.log("STATUS:", res.status);
+    console.log("USER RESPONSE:", data);
+
+    if (!res.ok) {
+      console.error("Backend error:", data);
+      return;
     }
-  };
+
+    const u = data.user || data.data || data;
+
+    setUser({
+      name: `${u?.first_name || ""} ${u?.last_name || ""}`.trim(),
+      phone: u?.whatsapp_number || ""
+    });
+
+  } catch (err) {
+    console.error("User fetch error:", err);
+  }
+};
 
   const fetchRecentCampaigns = async () => {
     setCampaignLoading(true);

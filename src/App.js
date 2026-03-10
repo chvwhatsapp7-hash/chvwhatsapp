@@ -21,14 +21,22 @@ import ResetPasswordPage from './pages/auth/resetpassword';
 
 // A component to protect routes
 const PrivateRoute = ({ children, role }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
+
+  if (loading) {
+    return null; // or a loader
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
   if (user.role !== role) {
-    return user.role === 'admin' ? <Navigate to="/admin" replace /> : <Navigate to="/client" replace />;
+    return user.role === "admin"
+      ? <Navigate to="/admin" replace />
+      : <Navigate to="/client" replace />;
   }
+
   return children;
 };
 

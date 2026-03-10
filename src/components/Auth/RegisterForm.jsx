@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom";
 function RegisterPage() {
   const location = useLocation();
   
@@ -12,7 +11,7 @@ function RegisterPage() {
 
 
 function RegisterForm({ isAdmin }) {
-  // const navigate = useNavigate(); // <-- REMOVE THIS line
+ const navigate = useNavigate(); // <-- REMOVE THIS line
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -114,6 +113,11 @@ function RegisterForm({ isAdmin }) {
           (data && data.message) ||
             "Registration successful! Please check your email for verification."
         );
+        if (isAdmin) {
+  setTimeout(() => {
+    navigate("/admin");
+  }, 1000);
+}
         // clear form
         setFormData({
   firstName: "",
