@@ -77,7 +77,14 @@ function Campaigns() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to fetch campaigns");
-      setCampaigns(data.data || []);
+      const campaignList = data.data || [];
+setCampaigns(campaignList);
+
+// ✅ Auto select first campaign on load
+if (campaignList.length > 0) {
+  setSelectedCampaignId(campaignList[campaignList.length - 1].campaignid);
+  setSelectedTemplateId(campaignList[0].templateid);
+}
     } catch (err) {
       console.error("Campaign fetch error:", err);
     } finally {
@@ -171,6 +178,66 @@ function Campaigns() {
     return () => clearInterval(interval);
   }, [runningCampaignId, pausedCampaignId]);
 
+  const sentMessage = async (data) => {
+    const token = localStorage.getItem("token");
+  try {
+    const response = await fetch("/api/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // 👈 important
+      },
+      body: JSON.stringify({
+        template_id: data.template_id,
+        message: data.message,
+        contacts: data.contacts,
+        image: data.image,
+        button: data.button,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to sent messages");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Sent message error:", error);
+    throw error;
+  }
+};
+
+const addReceipt = async (data) => { 
+  try {
+    const response = await fetch("/api/message_receipts?action=add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messageid: data.messageid,
+        contactid: data.contactid,
+        template_id: data.template_id,
+        status: data.status, // optional (sent / unsent)
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to add recipient");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Add receipt error:", error);
+    throw error;
+  }
+};
+
+
   return (
     <ClientLayout pageTitle="Campaigns">
       <div className="campaign-page">
@@ -182,12 +249,31 @@ function Campaigns() {
           )}
 
           {selectedTemplate && (
-            <div className="message-bubble">
-              <div className="message-body">
-                {selectedTemplate.message_body}
-              </div>
-            </div>
-          )}
+  <div className="message-bubble">
+    <div className="message-body">
+
+      {/* ✅ Show image only if header_type is image */}
+      {selectedTemplate.header_type === "image" &&
+        selectedTemplate.header_media_url && (
+          <div style={{ marginBottom: "10px" }}>
+            <img
+  src={selectedTemplate.header_media_url}
+  alt="Template Header"
+  style={{
+    width: "130px",
+    height: "auto",
+    borderRadius: "8px",
+    display: "block"
+  }}
+/>
+          </div>
+      )}
+
+      {selectedTemplate.message_body}
+
+    </div>
+  </div>
+)}
 
           <div className="campaigns-list">
             <h3 className="campaignh3">Created Campaigns</h3>
@@ -241,9 +327,17 @@ function Campaigns() {
                         className="btn start"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setProgress(0);
-                          setPausedCampaignId(null);
-                          setRunningCampaignId(c.campaignid);
+                          // setProgress(0);
+                          // setPausedCampaignId(null);
+                          // setRunningCampaignId(c.campaignid);
+                          for(const contactId of selectedContacts) {
+                            sentMessage({
+                              campaignid: c.campaignid,
+                              contactid: contactId,
+                              template_id: c.templateid,
+                              message: selectedTemplate.message_body,
+                            });
+                          }
                         }}
                       >
                         Start
@@ -387,18 +481,71 @@ function Campaigns() {
       <div className="grid-wrapper">
         <h3>Templates</h3>
         <div className="template-grid">
-          {templates.map((t) => (
-            <div
-              key={t.id}
-              className={`grid-card ${
-                selectedTemplateId === t.id ? "selected" : ""
-              }`}
-              onClick={() => toggleTemplate(t.id)}
-            >
-              <strong>{t.template_name}</strong>
-              <div>{t.message_body}</div>
-            </div>
-          ))}
+     {templates.map((t) => (
+  <div
+    key={t.id}
+    className={`grid-card ${
+  selectedTemplateId === t.id ? "selected" : ""
+}`}
+style={{
+  cursor: "default"
+}}
+   onClick={(e) => e.stopPropagation()}
+  >
+    <strong>
+      {t.template_name}
+
+      {t.header_type === "image" && (
+        <span style={{ marginLeft: "8px" }}>🖼️</span>
+      )}
+
+      {t.header_type === "video" && (
+        <span style={{ marginLeft: "8px" }}>🎥</span>
+      )}
+
+      {t.header_type === "document" && (
+        <span style={{ marginLeft: "8px" }}>📄</span>
+      )}
+    </strong>
+
+    <div>{t.message_body}</div>
+    {/* ✅ Always show attachment if media URL exists */}
+    {t.header_media_url && (
+  <div style={{ marginTop: "8px" }}>
+
+    {t.header_type?.toLowerCase() === "image" && (
+      <img
+        src={t.header_media_url}
+        alt="attachment"
+        style={{ maxWidth: "100%", borderRadius: "6px" }}
+      />
+    )}
+
+    {t.header_type?.toLowerCase() === "video" && (
+      <video
+        src={t.header_media_url}
+        controls
+        style={{ maxWidth: "100%", borderRadius: "6px" }}
+      />
+    )}
+
+    {(t.header_type?.toLowerCase() === "document" ||
+      !["image", "video"].includes(
+        t.header_type?.toLowerCase()
+      )) && (
+      <a
+        href={t.header_media_url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        📄 View Attachment
+      </a>
+    )}
+
+  </div>
+)}
+  </div>
+))}
         </div>
       </div>
 
